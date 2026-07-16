@@ -2,10 +2,14 @@ package com.stevebyk.java0715;
 
 import com.stevebyk.java0715.account.AccountResponse;
 import com.stevebyk.java0715.account.AccountService;
+import com.stevebyk.java0715.account.AccountStatus;
 import com.stevebyk.java0715.account.AccountType;
 import com.stevebyk.java0715.account.CreateAccountRequest;
 import com.stevebyk.java0715.account.DepositRequest;
+import com.stevebyk.java0715.account.UpdateAccountStatusRequest;
 import com.stevebyk.java0715.account.UserRegion;
+import com.stevebyk.java0715.common.BusinessException;
+import com.stevebyk.java0715.ledger.LedgerService;
 import com.stevebyk.java0715.remittance.RemittanceRequest;
 import com.stevebyk.java0715.remittance.RemittanceResponse;
 import com.stevebyk.java0715.remittance.RemittanceService;
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class BankingFlowIntegrationTest {
@@ -31,6 +36,9 @@ class BankingFlowIntegrationTest {
 
     @Autowired
     private RemittanceService remittanceService;
+
+    @Autowired
+    private LedgerService ledgerService;
 
     @Test
     void shouldDepositTransferAndRemit() {
@@ -72,5 +80,34 @@ class BankingFlowIntegrationTest {
         assertThat(response.status()).isEqualTo(TransactionStatus.RISK_REJECTED);
         assertThat(accountService.getAccount(sender.accountNo()).availableBalance())
                 .isEqualByComparingTo("300000.00");
+    }
+
+    @Test
+    void shouldLoadGeneratedDemoData() {
+        AccountResponse demoAccount = accountService.getAccount("AC_DEMO_CNY_001");
+        TransferResponse transfer = transferService.getByOrderNo("TR_DEMO_SUCCESS");
+        RemittanceResponse remittance = remittanceService.getByOrderNo("RM_DEMO_SUCCESS");
+
+        assertThat(demoAccount.availableBalance()).isEqualByComparingTo("97797.90");
+        assertThat(transfer.status()).isEqualTo(TransactionStatus.SUCCESS);
+        assertThat(remittance.targetAmount()).isEqualByComparingTo("98.00");
+        assertThat(ledgerService.findByTransactionNo("TR_DEMO_SUCCESS")).hasSize(2);
+    }
+
+    @Test
+    void shouldBlockDepositWhenAccountIsFrozenThenAllowAfterActivation() {
+        assertThat(accountService.getAccount("AC_DEMO_CNY_FROZEN").status()).isEqualTo(AccountStatus.FROZEN);
+
+        assertThatThrownBy(() -> accountService.deposit("AC_DEMO_CNY_FROZEN", new DepositRequest("dep-frozen-001",
+                new BigDecimal("100.00"), "CNY", "blocked")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("account is not active");
+
+        accountService.updateStatus("AC_DEMO_CNY_FROZEN",
+                new UpdateAccountStatusRequest(AccountStatus.ACTIVE, "test activation"));
+        AccountResponse updated = accountService.deposit("AC_DEMO_CNY_FROZEN", new DepositRequest("dep-frozen-002",
+                new BigDecimal("100.00"), "CNY", "allowed"));
+
+        assertThat(updated.availableBalance()).isEqualByComparingTo("5100.00");
     }
 }

@@ -20,7 +20,7 @@ public record RemittanceResponse(
         String failureReason
 ) {
 
-    static RemittanceResponse from(RemittanceOrderEntity entity) {
+    public static RemittanceResponse from(RemittanceOrderEntity entity) {
         return new RemittanceResponse(entity.getOrderNo(), entity.getRequestId(), entity.getSenderAccountNo(),
                 entity.getReceiverAccountNo(), entity.getSourceAmount(), entity.getExchangeRate(), entity.getFee(),
                 entity.getTargetAmount(), entity.getSourceCurrency(), entity.getTargetCurrency(),

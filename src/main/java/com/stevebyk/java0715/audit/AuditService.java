@@ -1,6 +1,7 @@
 package com.stevebyk.java0715.audit;
 
 import java.time.Instant;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,5 +21,11 @@ public class AuditService {
         entity.setDetail(detail);
         entity.setCreatedAt(Instant.now());
         auditLogRepository.save(entity);
+    }
+
+    public List<AuditLogResponse> findByBusinessNo(String businessNo) {
+        return auditLogRepository.findByBusinessNoOrderByCreatedAtDesc(businessNo).stream()
+                .map(AuditLogResponse::from)
+                .toList();
     }
 }

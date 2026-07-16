@@ -45,6 +45,17 @@ X-API-Key: dev-api-key
 }
 ```
 
+### Update Account Status
+
+`PATCH /accounts/{accountNo}/status`
+
+```json
+{
+  "status": "FROZEN",
+  "reason": "risk control hold"
+}
+```
+
 ## Transfer
 
 ### Domestic Transfer
@@ -72,6 +83,10 @@ Risk rejection example:
 }
 ```
 
+### Get Transfer Order
+
+`GET /transfers/{orderNo}`
+
 ## Remittance
 
 ### International Remittance
@@ -95,3 +110,53 @@ Risk rejection example:
 ```
 
 The service debits `sourceAmount + fee` from the sender and credits `sourceAmount * exchangeRate` to the receiver.
+
+### Get Remittance Order
+
+`GET /remittances/{orderNo}`
+
+## Ledger
+
+### Query Ledger by Transaction
+
+`GET /ledger/transactions/{transactionNo}`
+
+Demo:
+
+```text
+GET /ledger/transactions/TR_DEMO_SUCCESS
+```
+
+### Query Ledger by Account
+
+`GET /ledger/accounts/{accountNo}`
+
+Demo:
+
+```text
+GET /ledger/accounts/AC_DEMO_CNY_001
+```
+
+## Audit
+
+### Query Audit by Business Number
+
+`GET /audit/{businessNo}`
+
+Demo:
+
+```text
+GET /audit/TR_DEMO_SUCCESS
+```
+
+## Outbox
+
+### Query Outbox Events by Aggregate
+
+`GET /outbox/{aggregateId}`
+
+Demo:
+
+```text
+GET /outbox/RM_DEMO_SUCCESS
+```

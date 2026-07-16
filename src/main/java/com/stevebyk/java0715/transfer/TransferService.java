@@ -50,6 +50,13 @@ public class TransferService {
                 () -> doTransfer(request));
     }
 
+    @Transactional(readOnly = true)
+    public TransferResponse getByOrderNo(String orderNo) {
+        return transferOrderRepository.findByOrderNo(orderNo)
+                .map(TransferResponse::from)
+                .orElseThrow(() -> new BusinessException("TRANSFER_NOT_FOUND", "transfer order not found"));
+    }
+
     private TransferResponse doTransfer(TransferRequest request) {
         MoneyUtils.requirePositive(request.amount());
         String orderNo = "TR" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);

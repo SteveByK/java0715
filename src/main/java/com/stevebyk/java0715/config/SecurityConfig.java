@@ -12,6 +12,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,6 +26,8 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, ApiKeyFilter apiKeyFilter) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> registry
                         .requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().permitAll())
@@ -34,6 +38,11 @@ public class SecurityConfig {
     @Bean
     ApiKeyFilter apiKeyFilter(@Value("${bank.security.api-key}") String apiKey) {
         return new ApiKeyFilter(apiKey);
+    }
+
+    @Bean
+    UserDetailsService userDetailsService() {
+        return new InMemoryUserDetailsManager();
     }
 
     static class ApiKeyFilter extends OncePerRequestFilter {

@@ -2,6 +2,7 @@ package com.stevebyk.java0715.ledger;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -27,5 +28,17 @@ public class LedgerService {
         entity.setEntryType(entryType);
         entity.setCreatedAt(Instant.now());
         ledgerEntryRepository.save(entity);
+    }
+
+    public List<LedgerEntryResponse> findByTransactionNo(String transactionNo) {
+        return ledgerEntryRepository.findByTransactionNoOrderByIdAsc(transactionNo).stream()
+                .map(LedgerEntryResponse::from)
+                .toList();
+    }
+
+    public List<LedgerEntryResponse> findByAccountNo(String accountNo) {
+        return ledgerEntryRepository.findByAccountNoOrderByCreatedAtDesc(accountNo).stream()
+                .map(LedgerEntryResponse::from)
+                .toList();
     }
 }

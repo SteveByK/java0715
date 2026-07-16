@@ -17,6 +17,8 @@ The project is intentionally built as a modular monolith. It keeps deployment si
 - OpenAPI / Swagger UI
 - Maven
 - Docker Compose
+- Flyway demo data generation
+- React + Bun + Vite frontend console
 
 ## Architecture
 
@@ -39,8 +41,40 @@ Main design choices:
 - Remit from a domestic or overseas account to another account with exchange rate and fee.
 - Reject high-risk domestic transfers before debit.
 - Reject remittance to blocked destination countries.
+- Freeze and unfreeze accounts.
 - Prevent repeated processing through idempotency records.
 - Write ledger entries for debit and credit operations.
+- Query ledger, audit and outbox records for traceability.
+
+Detailed scenario mapping:
+
+```text
+docs/scenario-code-map.md
+```
+
+Frontend guide:
+
+```text
+docs/frontend.md
+```
+
+## Generated Demo Data
+
+Flyway migration `V2__seed_demo_banking_data.sql` creates demo accounts, orders, ledger entries, audit logs and outbox events.
+
+Useful demo identifiers:
+
+```text
+AC_DEMO_CNY_001       domestic source account
+AC_DEMO_CNY_002       domestic receiver account
+AC_DEMO_USD_001       overseas USD receiver account
+AC_DEMO_CNY_HIGH      high-balance account for risk rejection
+AC_DEMO_CNY_FROZEN    frozen account scenario
+TR_DEMO_SUCCESS       successful domestic transfer
+TR_DEMO_RISK_REJECTED high-amount transfer rejected by risk
+RM_DEMO_SUCCESS       successful international remittance
+RM_DEMO_RISK_REJECTED blocked-country remittance rejected by risk
+```
 
 ## Run Locally
 
@@ -54,17 +88,27 @@ Start with MySQL:
 
 ```bash
 docker compose up -d
-set DB_URL=jdbc:mysql://localhost:3306/java0715?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-set DB_USERNAME=bank
-set DB_PASSWORD=bank123456
-set DB_DRIVER=com.mysql.cj.jdbc.Driver
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
 Swagger UI:
 
 ```text
 http://localhost:8080/swagger-ui.html
+```
+
+React frontend:
+
+```bash
+cd frontend
+bun install
+bun run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
 ```
 
 All business APIs require:
@@ -109,6 +153,22 @@ curl -X POST http://localhost:8080/api/v1/remittances ^
   -H "Content-Type: application/json" ^
   -H "X-API-Key: dev-api-key" ^
   -d "{\"requestId\":\"rm-1001\",\"senderAccountNo\":\"AC_CNY\",\"receiverAccountNo\":\"AC_USD\",\"sourceAmount\":700.00,\"sourceCurrency\":\"CNY\",\"targetCurrency\":\"USD\",\"exchangeRate\":0.14,\"destinationCountry\":\"US\",\"swiftCode\":\"BOFAUS3N\",\"remark\":\"family support\"}"
+```
+
+Query seed transfer ledger:
+
+```bash
+curl http://localhost:8080/api/v1/ledger/transactions/TR_DEMO_SUCCESS ^
+  -H "X-API-Key: dev-api-key"
+```
+
+Freeze or reactivate an account:
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/accounts/AC_DEMO_CNY_FROZEN/status ^
+  -H "Content-Type: application/json" ^
+  -H "X-API-Key: dev-api-key" ^
+  -d "{\"status\":\"ACTIVE\",\"reason\":\"manual review passed\"}"
 ```
 
 ## Validation

@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntryEntity, Long> {
 
     List<LedgerEntryEntity> findByTransactionNoOrderByIdAsc(String transactionNo);
+
+    List<LedgerEntryEntity> findByAccountNoOrderByCreatedAtDesc(String accountNo);
 }

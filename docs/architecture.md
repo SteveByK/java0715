@@ -19,6 +19,8 @@
 - `idempotency`: duplicate request protection.
 - `outbox`: reliable event publishing preparation.
 
+Detailed scenario-to-code ownership is documented in `docs/scenario-code-map.md`.
+
 ## Transaction Model
 
 Domestic transfer:

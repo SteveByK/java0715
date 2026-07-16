@@ -72,6 +72,18 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
+    @Transactional
+    public AccountResponse updateStatus(String accountNo, UpdateAccountStatusRequest request) {
+        AccountEntity account = loadForUpdate(accountNo);
+        account.setStatus(request.status());
+        account.setUpdatedAt(Instant.now());
+        auditService.record(accountNo, "UPDATE_ACCOUNT_STATUS", "SUCCESS",
+                "status=" + request.status() + ", reason=" + request.reason());
+        outboxService.publish(accountNo, "AccountStatusChangedEvent",
+                "{\"accountNo\":\"" + accountNo + "\",\"status\":\"" + request.status() + "\"}");
+        return AccountResponse.from(account);
+    }
+
     public AccountEntity loadForUpdate(String accountNo) {
         return accountRepository.findByAccountNoForUpdate(accountNo)
                 .orElseThrow(() -> new BusinessException("ACCOUNT_NOT_FOUND", "account not found"));

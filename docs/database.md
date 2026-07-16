@@ -4,9 +4,25 @@ Flyway migration file:
 
 ```text
 src/main/resources/db/migration/V1__init_bank_schema.sql
+src/main/resources/db/migration/V2__seed_demo_banking_data.sql
 ```
 
 ## Tables
+
+## Demo Data
+
+`V2__seed_demo_banking_data.sql` creates a complete scenario dataset:
+
+- Domestic CNY accounts: `AC_DEMO_CNY_001`, `AC_DEMO_CNY_002`
+- Overseas USD accounts: `AC_DEMO_USD_001`, `AC_DEMO_USD_002`
+- High-balance risk account: `AC_DEMO_CNY_HIGH`
+- Frozen account: `AC_DEMO_CNY_FROZEN`
+- Successful domestic transfer: `TR_DEMO_SUCCESS`
+- Risk-rejected domestic transfer: `TR_DEMO_RISK_REJECTED`
+- Successful international remittance: `RM_DEMO_SUCCESS`
+- Risk-rejected remittance: `RM_DEMO_RISK_REJECTED`
+
+These rows include matching ledger entries, audit logs, idempotency records and outbox events where applicable.
 
 ### account_balance
 

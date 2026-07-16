@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,5 +34,11 @@ public class AccountController {
     public ApiResponse<AccountResponse> deposit(@PathVariable String accountNo,
                                                 @Valid @RequestBody DepositRequest request) {
         return ApiResponse.ok(accountService.deposit(accountNo, request));
+    }
+
+    @PatchMapping("/{accountNo}/status")
+    public ApiResponse<AccountResponse> updateStatus(@PathVariable String accountNo,
+                                                     @Valid @RequestBody UpdateAccountStatusRequest request) {
+        return ApiResponse.ok(accountService.updateStatus(accountNo, request));
     }
 }

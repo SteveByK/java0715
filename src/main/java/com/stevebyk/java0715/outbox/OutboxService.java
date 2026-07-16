@@ -1,6 +1,7 @@
 package com.stevebyk.java0715.outbox;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -22,5 +23,11 @@ public class OutboxService {
         entity.setStatus("NEW");
         entity.setCreatedAt(Instant.now());
         outboxEventRepository.save(entity);
+    }
+
+    public List<OutboxEventResponse> findByAggregateId(String aggregateId) {
+        return outboxEventRepository.findByAggregateIdOrderByCreatedAtDesc(aggregateId).stream()
+                .map(OutboxEventResponse::from)
+                .toList();
     }
 }

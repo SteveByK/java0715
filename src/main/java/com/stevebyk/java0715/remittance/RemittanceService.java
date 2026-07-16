@@ -3,6 +3,7 @@ package com.stevebyk.java0715.remittance;
 import com.stevebyk.java0715.account.AccountEntity;
 import com.stevebyk.java0715.account.AccountService;
 import com.stevebyk.java0715.audit.AuditService;
+import com.stevebyk.java0715.common.BusinessException;
 import com.stevebyk.java0715.common.MoneyUtils;
 import com.stevebyk.java0715.idempotency.IdempotencyService;
 import com.stevebyk.java0715.lock.AccountLockExecutor;
@@ -50,6 +51,13 @@ public class RemittanceService {
         return accountLockExecutor.executeWithAccountLocks(
                 List.of(request.senderAccountNo(), request.receiverAccountNo()),
                 () -> doRemit(request));
+    }
+
+    @Transactional(readOnly = true)
+    public RemittanceResponse getByOrderNo(String orderNo) {
+        return remittanceOrderRepository.findByOrderNo(orderNo)
+                .map(RemittanceResponse::from)
+                .orElseThrow(() -> new BusinessException("REMITTANCE_NOT_FOUND", "remittance order not found"));
     }
 
     private RemittanceResponse doRemit(RemittanceRequest request) {
