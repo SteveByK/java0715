@@ -1,7 +1,14 @@
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+
+WORKDIR /workspace
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -DskipTests package
+
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
-COPY target/java0715-0.1.0-SNAPSHOT.jar /app/java0715.jar
+COPY --from=build /workspace/target/java0715-0.1.0-SNAPSHOT.jar /app/java0715.jar
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/app/java0715.jar"]

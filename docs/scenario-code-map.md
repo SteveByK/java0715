@@ -251,3 +251,115 @@ Seed data:
 - `TR_DEMO_SUCCESS`
 - `RM_DEMO_SUCCESS`
 - `AC_DEMO_CNY_001`
+
+## 9. Customer and KYC
+
+Purpose:
+
+- Register customers and manage KYC review status.
+
+API:
+
+- `POST /api/v1/customers`
+- `GET /api/v1/customers/{customerId}`
+- `PUT /api/v1/customers/{customerId}/kyc`
+- `POST /api/v1/customers/{customerId}/kyc/review`
+
+Core code:
+
+- `customer/CustomerController.java`
+- `customer/CustomerService.java`
+- `customer/CustomerEntity.java`
+- `customer/KycEntity.java`
+
+Tables:
+
+- `customer_profile`
+- `kyc_profile`
+- `audit_log`
+- `outbox_event`
+
+Seed data:
+
+- `C_DEMO_001`
+- `C_DEMO_002`
+- `U_DEMO_001`
+- `U_DEMO_002`
+
+## 10. Hold and Release Funds
+
+Purpose:
+
+- Move money between available and frozen balances.
+
+API:
+
+- `POST /api/v1/accounts/{accountNo}/holds`
+- `POST /api/v1/accounts/{accountNo}/holds/release`
+
+Core code:
+
+- `account/AccountService.holdFunds`
+- `account/AccountService.releaseFunds`
+
+Tables:
+
+- `account_balance`
+- `ledger_entry`
+- `idempotency_record`
+- `audit_log`
+- `outbox_event`
+
+## 11. Pricing Rules
+
+Purpose:
+
+- Quote remittance exchange rate, fee and target amount.
+
+API:
+
+- `GET /api/v1/pricing/remittance-quote`
+
+Core code:
+
+- `pricing/PricingController.java`
+- `pricing/PricingService.java`
+- `pricing/ExchangeRateEntity.java`
+- `pricing/FeeRuleEntity.java`
+
+Tables:
+
+- `exchange_rate`
+- `fee_rule`
+
+Seed data:
+
+- `FX_CNY_USD_DEMO`
+- `FX_USD_CNY_DEMO`
+- `FEE_RM_CNY_USD`
+- `FEE_RM_USD_CNY`
+
+## 12. Transfer Reversal
+
+Purpose:
+
+- Reverse a successful domestic transfer exactly once.
+
+API:
+
+- `POST /api/v1/transfers/{orderNo}/reversals`
+
+Core code:
+
+- `transfer/TransferService.reverse`
+- `transfer/ReversalOrderEntity.java`
+
+Tables:
+
+- `reversal_order`
+- `transfer_order`
+- `account_balance`
+- `ledger_entry`
+- `idempotency_record`
+- `audit_log`
+- `outbox_event`

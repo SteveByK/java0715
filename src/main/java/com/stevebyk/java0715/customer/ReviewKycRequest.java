@@ -1,0 +1,10 @@
+package com.stevebyk.java0715.customer;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public record ReviewKycRequest(
+        @NotNull KycStatus status,
+        @NotBlank String reviewedBy
+) {
+}

@@ -5,6 +5,7 @@ Flyway migration file:
 ```text
 src/main/resources/db/migration/V1__init_bank_schema.sql
 src/main/resources/db/migration/V2__seed_demo_banking_data.sql
+src/main/resources/db/migration/V3__advanced_banking_features.sql
 ```
 
 ## Tables
@@ -23,6 +24,14 @@ src/main/resources/db/migration/V2__seed_demo_banking_data.sql
 - Risk-rejected remittance: `RM_DEMO_RISK_REJECTED`
 
 These rows include matching ledger entries, audit logs, idempotency records and outbox events where applicable.
+
+`V3__advanced_banking_features.sql` adds:
+
+- `customer_profile`
+- `kyc_profile`
+- `fee_rule`
+- `exchange_rate`
+- `reversal_order`
 
 ### account_balance
 

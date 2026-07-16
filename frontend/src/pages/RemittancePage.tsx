@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { bankApi } from "../api/client";
-import type { RemittanceOrder } from "../api/types";
+import type { Quote, RemittanceOrder } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
 export function RemittancePage() {
   const [orderNo, setOrderNo] = useState("RM_DEMO_SUCCESS");
   const [remittance, setRemittance] = useState<RemittanceOrder | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [result, setResult] = useState<string | null>(null);
 
@@ -47,6 +48,18 @@ export function RemittancePage() {
     }
   }
 
+  async function quoteCurrent() {
+    setError(null);
+    setResult(null);
+    try {
+      const data = await bankApi.quoteRemittance("CNY", "USD", 700);
+      setQuote(data);
+      setResult("报价查询完成");
+    } catch (caught) {
+      setError(caught);
+    }
+  }
+
   return (
     <div className="two-column">
       <section className="panel">
@@ -59,10 +72,11 @@ export function RemittancePage() {
           <button onClick={query}>查询汇款</button>
           <button onClick={() => submit(false)}>发起 50 CNY 汇款</button>
           <button className="danger" onClick={() => submit(true)}>发起国家风控案例</button>
+          <button onClick={quoteCurrent}>查询 700 CNY 报价</button>
         </div>
         <ResultNotice result={result} error={error} />
       </section>
-      <DataPanel title="汇款响应" data={remittance} error={error} />
+      <DataPanel title="汇款响应" data={{ remittance, quote }} error={error} />
     </div>
   );
 }

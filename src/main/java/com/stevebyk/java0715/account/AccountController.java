@@ -41,4 +41,16 @@ public class AccountController {
                                                      @Valid @RequestBody UpdateAccountStatusRequest request) {
         return ApiResponse.ok(accountService.updateStatus(accountNo, request));
     }
+
+    @PostMapping("/{accountNo}/holds")
+    public ApiResponse<AccountResponse> holdFunds(@PathVariable String accountNo,
+                                                  @Valid @RequestBody HoldFundsRequest request) {
+        return ApiResponse.ok(accountService.holdFunds(accountNo, request));
+    }
+
+    @PostMapping("/{accountNo}/holds/release")
+    public ApiResponse<AccountResponse> releaseFunds(@PathVariable String accountNo,
+                                                     @Valid @RequestBody HoldFundsRequest request) {
+        return ApiResponse.ok(accountService.releaseFunds(accountNo, request));
+    }
 }

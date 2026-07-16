@@ -37,6 +37,8 @@ http://localhost:5173
 
 Vite proxies `/api` and `/actuator` to `http://localhost:8081`, so the browser calls real backend APIs without a CORS change during local development.
 
+Docker Compose sets `VITE_API_PROXY_TARGET=http://backend:8080` so the frontend container can proxy API calls to the backend container.
+
 ## Pages
 
 - Dashboard: summary, seed account balances and transaction status overview.

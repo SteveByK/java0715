@@ -8,15 +8,14 @@ import com.stevebyk.java0715.common.MoneyUtils;
 import com.stevebyk.java0715.idempotency.IdempotencyService;
 import com.stevebyk.java0715.lock.AccountLockExecutor;
 import com.stevebyk.java0715.outbox.OutboxService;
+import com.stevebyk.java0715.pricing.PricingService;
 import com.stevebyk.java0715.risk.RiskDecision;
 import com.stevebyk.java0715.risk.RiskService;
 import com.stevebyk.java0715.transfer.TransactionStatus;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +29,12 @@ public class RemittanceService {
     private final AuditService auditService;
     private final OutboxService outboxService;
     private final AccountLockExecutor accountLockExecutor;
-    private final BigDecimal defaultFeeRate;
+    private final PricingService pricingService;
 
     public RemittanceService(AccountService accountService, RemittanceOrderRepository remittanceOrderRepository,
                              RiskService riskService, IdempotencyService idempotencyService, AuditService auditService,
                              OutboxService outboxService, AccountLockExecutor accountLockExecutor,
-                             @Value("${bank.transfer.default-remittance-fee-rate}") BigDecimal defaultFeeRate) {
+                             PricingService pricingService) {
         this.accountService = accountService;
         this.remittanceOrderRepository = remittanceOrderRepository;
         this.riskService = riskService;
@@ -43,7 +42,7 @@ public class RemittanceService {
         this.auditService = auditService;
         this.outboxService = outboxService;
         this.accountLockExecutor = accountLockExecutor;
-        this.defaultFeeRate = defaultFeeRate;
+        this.pricingService = pricingService;
     }
 
     @Transactional
@@ -65,7 +64,7 @@ public class RemittanceService {
         String orderNo = "RM" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);
         idempotencyService.ensureFirstRequest(request.requestId(), "INTERNATIONAL_REMITTANCE", orderNo);
         BigDecimal sourceAmount = MoneyUtils.normalize(request.sourceAmount(), request.sourceCurrency().toUpperCase());
-        BigDecimal fee = sourceAmount.multiply(defaultFeeRate).setScale(sourceAmount.scale(), RoundingMode.HALF_UP);
+        BigDecimal fee = pricingService.calculateRemittanceFee(request.sourceCurrency(), request.targetCurrency(), sourceAmount);
         BigDecimal debitAmount = sourceAmount.add(fee);
         BigDecimal targetAmount = MoneyUtils.normalize(sourceAmount.multiply(request.exchangeRate()),
                 request.targetCurrency().toUpperCase());

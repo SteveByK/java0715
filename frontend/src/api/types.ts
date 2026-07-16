@@ -8,6 +8,8 @@ export type ApiResponse<T> = {
 export type AccountStatus = "ACTIVE" | "FROZEN" | "CLOSED";
 export type AccountType = "SAVINGS" | "CHECKING" | "FOREIGN_CURRENCY";
 export type UserRegion = "DOMESTIC" | "OVERSEAS";
+export type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type KycLevel = "BASIC" | "STANDARD" | "ENHANCED";
 export type TransactionStatus =
   | "CREATED"
   | "RISK_REJECTED"
@@ -89,4 +91,38 @@ export type OutboxEvent = {
   payload: string;
   status: string;
   createdAt: string;
+};
+
+export type Customer = {
+  customerId: string;
+  fullName: string;
+  userRegion: UserRegion;
+  countryCode: string;
+  phone?: string | null;
+  email?: string | null;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  status: "ACTIVE" | "SUSPENDED" | "CLOSED";
+  kycStatus?: KycStatus | null;
+  kycLevel?: KycLevel | null;
+};
+
+export type Quote = {
+  sourceCurrency: string;
+  targetCurrency: string;
+  sourceAmount: number;
+  exchangeRate: number;
+  fee: number;
+  targetAmount: number;
+  feeRuleCode: string;
+  rateCode: string;
+};
+
+export type Reversal = {
+  reversalNo: string;
+  originalOrderNo: string;
+  requestId: string;
+  amount: number;
+  currency: string;
+  status: TransactionStatus;
+  reason: string;
 };

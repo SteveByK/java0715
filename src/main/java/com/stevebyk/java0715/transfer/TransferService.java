@@ -27,10 +27,12 @@ public class TransferService {
     private final AuditService auditService;
     private final OutboxService outboxService;
     private final AccountLockExecutor accountLockExecutor;
+    private final ReversalOrderRepository reversalOrderRepository;
 
     public TransferService(AccountService accountService, TransferOrderRepository transferOrderRepository,
                            RiskService riskService, IdempotencyService idempotencyService, AuditService auditService,
-                           OutboxService outboxService, AccountLockExecutor accountLockExecutor) {
+                           OutboxService outboxService, AccountLockExecutor accountLockExecutor,
+                           ReversalOrderRepository reversalOrderRepository) {
         this.accountService = accountService;
         this.transferOrderRepository = transferOrderRepository;
         this.riskService = riskService;
@@ -38,6 +40,7 @@ public class TransferService {
         this.auditService = auditService;
         this.outboxService = outboxService;
         this.accountLockExecutor = accountLockExecutor;
+        this.reversalOrderRepository = reversalOrderRepository;
     }
 
     @Transactional
@@ -55,6 +58,21 @@ public class TransferService {
         return transferOrderRepository.findByOrderNo(orderNo)
                 .map(TransferResponse::from)
                 .orElseThrow(() -> new BusinessException("TRANSFER_NOT_FOUND", "transfer order not found"));
+    }
+
+    @Transactional
+    public ReversalResponse reverse(String orderNo, ReversalRequest request) {
+        TransferOrderEntity original = transferOrderRepository.findByOrderNo(orderNo)
+                .orElseThrow(() -> new BusinessException("TRANSFER_NOT_FOUND", "transfer order not found"));
+        if (original.getStatus() != TransactionStatus.SUCCESS) {
+            throw new BusinessException("TRANSFER_NOT_REVERSIBLE", "only successful transfer can be reversed");
+        }
+        if (reversalOrderRepository.findByOriginalOrderNo(orderNo).isPresent()) {
+            throw new BusinessException("TRANSFER_ALREADY_REVERSED", "transfer has already been reversed");
+        }
+        return accountLockExecutor.executeWithAccountLocks(
+                List.of(original.getFromAccountNo(), original.getToAccountNo()),
+                () -> doReverse(original, request));
     }
 
     private TransferResponse doTransfer(TransferRequest request) {
@@ -99,5 +117,36 @@ public class TransferService {
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
         return transferOrderRepository.save(entity);
+    }
+
+    private ReversalResponse doReverse(TransferOrderEntity original, ReversalRequest request) {
+        String reversalNo = "RV" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);
+        idempotencyService.ensureFirstRequest(request.requestId(), "TRANSFER_REVERSAL", reversalNo);
+        AccountEntity originalSender = accountService.loadForUpdate(original.getFromAccountNo());
+        AccountEntity originalReceiver = accountService.loadForUpdate(original.getToAccountNo());
+        accountService.ensureCurrency(originalSender, original.getCurrency());
+        accountService.ensureCurrency(originalReceiver, original.getCurrency());
+
+        ReversalOrderEntity reversal = new ReversalOrderEntity();
+        reversal.setReversalNo(reversalNo);
+        reversal.setOriginalOrderNo(original.getOrderNo());
+        reversal.setRequestId(request.requestId());
+        reversal.setAmount(original.getAmount());
+        reversal.setCurrency(original.getCurrency());
+        reversal.setStatus(TransactionStatus.PROCESSING);
+        reversal.setReason(request.reason());
+        reversal.setCreatedAt(Instant.now());
+        reversal.setUpdatedAt(Instant.now());
+        ReversalOrderEntity saved = reversalOrderRepository.save(reversal);
+
+        accountService.debit(originalReceiver, original.getAmount(), reversalNo, "TRANSFER_REVERSAL_DEBIT");
+        accountService.credit(originalSender, original.getAmount(), reversalNo, "TRANSFER_REVERSAL_CREDIT");
+        saved.setStatus(TransactionStatus.SUCCESS);
+        saved.setUpdatedAt(Instant.now());
+        original.setStatus(TransactionStatus.REVERSED);
+        original.setUpdatedAt(Instant.now());
+        auditService.record(reversalNo, "TRANSFER_REVERSAL", "SUCCESS", request.reason());
+        outboxService.publish(reversalNo, "TransferReversedEvent", "{\"reversalNo\":\"" + reversalNo + "\"}");
+        return ReversalResponse.from(saved);
     }
 }

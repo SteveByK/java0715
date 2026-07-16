@@ -56,6 +56,23 @@ X-API-Key: dev-api-key
 }
 ```
 
+### Hold Funds
+
+`POST /accounts/{accountNo}/holds`
+
+```json
+{
+  "requestId": "hold-1001",
+  "amount": 50.00,
+  "currency": "CNY",
+  "reason": "card authorization"
+}
+```
+
+### Release Held Funds
+
+`POST /accounts/{accountNo}/holds/release`
+
 ## Transfer
 
 ### Domestic Transfer
@@ -87,6 +104,17 @@ Risk rejection example:
 
 `GET /transfers/{orderNo}`
 
+### Reverse Transfer
+
+`POST /transfers/{orderNo}/reversals`
+
+```json
+{
+  "requestId": "rv-1001",
+  "reason": "customer dispute"
+}
+```
+
 ## Remittance
 
 ### International Remittance
@@ -114,6 +142,30 @@ The service debits `sourceAmount + fee` from the sender and credits `sourceAmoun
 ### Get Remittance Order
 
 `GET /remittances/{orderNo}`
+
+## Customer and KYC
+
+### Create Customer
+
+`POST /customers`
+
+### Get Customer
+
+`GET /customers/{customerId}`
+
+### Submit KYC
+
+`PUT /customers/{customerId}/kyc`
+
+### Review KYC
+
+`POST /customers/{customerId}/kyc/review`
+
+## Pricing
+
+### Remittance Quote
+
+`GET /pricing/remittance-quote?sourceCurrency=CNY&targetCurrency=USD&sourceAmount=700`
 
 ## Ledger
 

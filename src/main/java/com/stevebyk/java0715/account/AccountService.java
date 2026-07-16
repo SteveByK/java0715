@@ -84,6 +84,48 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
+    @Transactional
+    public AccountResponse holdFunds(String accountNo, HoldFundsRequest request) {
+        MoneyUtils.requirePositive(request.amount());
+        idempotencyService.ensureFirstRequest(request.requestId(), "HOLD_FUNDS", accountNo);
+        AccountEntity account = loadForUpdate(accountNo);
+        ensureActive(account);
+        ensureCurrency(account, request.currency());
+        BigDecimal amount = MoneyUtils.normalize(request.amount(), account.getCurrency());
+        if (account.getAvailableBalance().compareTo(amount) < 0) {
+            throw new BusinessException("INSUFFICIENT_BALANCE", "available balance is not enough");
+        }
+        account.setAvailableBalance(account.getAvailableBalance().subtract(amount));
+        account.setFrozenBalance(account.getFrozenBalance().add(amount));
+        account.setUpdatedAt(Instant.now());
+        ledgerService.append(request.requestId(), accountNo, LedgerDirection.DEBIT, amount,
+                account.getAvailableBalance(), account.getCurrency(), "HOLD_FUNDS");
+        auditService.record(request.requestId(), "HOLD_FUNDS", "SUCCESS", request.reason());
+        outboxService.publish(request.requestId(), "FundsHeldEvent", "{\"accountNo\":\"" + accountNo + "\"}");
+        return AccountResponse.from(account);
+    }
+
+    @Transactional
+    public AccountResponse releaseFunds(String accountNo, HoldFundsRequest request) {
+        MoneyUtils.requirePositive(request.amount());
+        idempotencyService.ensureFirstRequest(request.requestId(), "RELEASE_FUNDS", accountNo);
+        AccountEntity account = loadForUpdate(accountNo);
+        ensureActive(account);
+        ensureCurrency(account, request.currency());
+        BigDecimal amount = MoneyUtils.normalize(request.amount(), account.getCurrency());
+        if (account.getFrozenBalance().compareTo(amount) < 0) {
+            throw new BusinessException("INSUFFICIENT_FROZEN_BALANCE", "frozen balance is not enough");
+        }
+        account.setFrozenBalance(account.getFrozenBalance().subtract(amount));
+        account.setAvailableBalance(account.getAvailableBalance().add(amount));
+        account.setUpdatedAt(Instant.now());
+        ledgerService.append(request.requestId(), accountNo, LedgerDirection.CREDIT, amount,
+                account.getAvailableBalance(), account.getCurrency(), "RELEASE_FUNDS");
+        auditService.record(request.requestId(), "RELEASE_FUNDS", "SUCCESS", request.reason());
+        outboxService.publish(request.requestId(), "FundsReleasedEvent", "{\"accountNo\":\"" + accountNo + "\"}");
+        return AccountResponse.from(account);
+    }
+
     public AccountEntity loadForUpdate(String accountNo) {
         return accountRepository.findByAccountNoForUpdate(accountNo)
                 .orElseThrow(() -> new BusinessException("ACCOUNT_NOT_FOUND", "account not found"));

@@ -4,6 +4,7 @@ import {
   BookOpen,
   CircleDollarSign,
   ClipboardList,
+  Contact,
   Gauge,
   Landmark,
   RadioTower,
@@ -15,14 +16,18 @@ import { AuditPage } from "./pages/AuditPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LedgerPage } from "./pages/LedgerPage";
 import { OutboxPage } from "./pages/OutboxPage";
+import { CustomersPage } from "./pages/CustomersPage";
+import { PricingPage } from "./pages/PricingPage";
 import { RemittancePage } from "./pages/RemittancePage";
 import { TransferPage } from "./pages/TransferPage";
 
 const navItems = [
   { to: "/dashboard", label: "总览", icon: Gauge },
+  { to: "/customers", label: "客户KYC", icon: Contact },
   { to: "/accounts", label: "账户", icon: Landmark },
   { to: "/transfers", label: "国内转账", icon: Banknote },
   { to: "/remittances", label: "国际汇款", icon: CircleDollarSign },
+  { to: "/pricing", label: "报价", icon: Activity },
   { to: "/ledger", label: "账本", icon: BookOpen },
   { to: "/audit", label: "审计", icon: ClipboardList },
   { to: "/outbox", label: "Outbox", icon: RadioTower }
@@ -65,9 +70,11 @@ export function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
           <Route path="/accounts" element={<AccountsPage />} />
           <Route path="/transfers" element={<TransferPage />} />
           <Route path="/remittances" element={<RemittancePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/ledger" element={<LedgerPage />} />
           <Route path="/audit" element={<AuditPage />} />
           <Route path="/outbox" element={<OutboxPage />} />

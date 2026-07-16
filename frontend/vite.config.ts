@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:8081",
-      "/actuator": "http://localhost:8081"
+      "/api": process.env.VITE_API_PROXY_TARGET || "http://localhost:8081",
+      "/actuator": process.env.VITE_API_PROXY_TARGET || "http://localhost:8081"
     }
   }
 });

@@ -28,4 +28,10 @@ public class TransferController {
     public ApiResponse<TransferResponse> get(@PathVariable String orderNo) {
         return ApiResponse.ok(transferService.getByOrderNo(orderNo));
     }
+
+    @PostMapping("/{orderNo}/reversals")
+    public ApiResponse<ReversalResponse> reverse(@PathVariable String orderNo,
+                                                 @Valid @RequestBody ReversalRequest request) {
+        return ApiResponse.ok(transferService.reverse(orderNo, request));
+    }
 }

@@ -6,13 +6,25 @@ import com.stevebyk.java0715.account.AccountStatus;
 import com.stevebyk.java0715.account.AccountType;
 import com.stevebyk.java0715.account.CreateAccountRequest;
 import com.stevebyk.java0715.account.DepositRequest;
+import com.stevebyk.java0715.account.HoldFundsRequest;
 import com.stevebyk.java0715.account.UpdateAccountStatusRequest;
 import com.stevebyk.java0715.account.UserRegion;
 import com.stevebyk.java0715.common.BusinessException;
+import com.stevebyk.java0715.customer.CreateCustomerRequest;
+import com.stevebyk.java0715.customer.CustomerResponse;
+import com.stevebyk.java0715.customer.CustomerService;
+import com.stevebyk.java0715.customer.KycLevel;
+import com.stevebyk.java0715.customer.KycStatus;
+import com.stevebyk.java0715.customer.ReviewKycRequest;
+import com.stevebyk.java0715.customer.SubmitKycRequest;
 import com.stevebyk.java0715.ledger.LedgerService;
+import com.stevebyk.java0715.pricing.PricingService;
+import com.stevebyk.java0715.pricing.QuoteResponse;
 import com.stevebyk.java0715.remittance.RemittanceRequest;
 import com.stevebyk.java0715.remittance.RemittanceResponse;
 import com.stevebyk.java0715.remittance.RemittanceService;
+import com.stevebyk.java0715.transfer.ReversalRequest;
+import com.stevebyk.java0715.transfer.ReversalResponse;
 import com.stevebyk.java0715.transfer.TransactionStatus;
 import com.stevebyk.java0715.transfer.TransferRequest;
 import com.stevebyk.java0715.transfer.TransferResponse;
@@ -39,6 +51,12 @@ class BankingFlowIntegrationTest {
 
     @Autowired
     private LedgerService ledgerService;
+
+    @Autowired
+    private CustomerService customerService;
+
+    @Autowired
+    private PricingService pricingService;
 
     @Test
     void shouldDepositTransferAndRemit() {
@@ -109,5 +127,74 @@ class BankingFlowIntegrationTest {
                 new BigDecimal("100.00"), "CNY", "allowed"));
 
         assertThat(updated.availableBalance()).isEqualByComparingTo("5100.00");
+    }
+
+    @Test
+    void shouldCreateCustomerSubmitAndReviewKyc() {
+        String customerId = "CUI" + System.nanoTime();
+
+        CustomerResponse created = customerService.createCustomer(new CreateCustomerRequest(
+                customerId, "Frontend Kyc User", UserRegion.DOMESTIC, "CN", "+8613900000000", "kyc@example.com"));
+        CustomerResponse submitted = customerService.submitKyc(customerId, new SubmitKycRequest(
+                "NATIONAL_ID", "110***********999", KycLevel.STANDARD));
+        CustomerResponse reviewed = customerService.reviewKyc(customerId, new ReviewKycRequest(
+                KycStatus.APPROVED, "tester"));
+
+        assertThat(created.kycStatus()).isNull();
+        assertThat(submitted.kycStatus()).isEqualTo(KycStatus.PENDING);
+        assertThat(reviewed.kycStatus()).isEqualTo(KycStatus.APPROVED);
+    }
+
+    @Test
+    void shouldQuoteRemittanceUsingSeededRules() {
+        QuoteResponse quote = pricingService.quoteRemittance("CNY", "USD", new BigDecimal("700.00"));
+
+        assertThat(quote.exchangeRate()).isEqualByComparingTo("0.14000000");
+        assertThat(quote.fee()).isEqualByComparingTo("2.10");
+        assertThat(quote.targetAmount()).isEqualByComparingTo("98.00");
+        assertThat(quote.feeRuleCode()).isEqualTo("FEE_RM_CNY_USD");
+    }
+
+    @Test
+    void shouldHoldAndReleaseFunds() {
+        AccountResponse account = accountService.createAccount(new CreateAccountRequest(
+                "C3001", "Hold User", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+        accountService.deposit(account.accountNo(), new DepositRequest("dep-hold-001",
+                new BigDecimal("1000.00"), "CNY", "hold setup"));
+
+        AccountResponse held = accountService.holdFunds(account.accountNo(), new HoldFundsRequest(
+                "hold-001", new BigDecimal("300.00"), "CNY", "card authorization"));
+        AccountResponse released = accountService.releaseFunds(account.accountNo(), new HoldFundsRequest(
+                "release-001", new BigDecimal("120.00"), "CNY", "partial release"));
+
+        assertThat(held.availableBalance()).isEqualByComparingTo("700.00");
+        assertThat(held.frozenBalance()).isEqualByComparingTo("300.00");
+        assertThat(released.availableBalance()).isEqualByComparingTo("820.00");
+        assertThat(released.frozenBalance()).isEqualByComparingTo("180.00");
+    }
+
+    @Test
+    void shouldReverseSuccessfulDomesticTransferOnlyOnce() {
+        AccountResponse sender = accountService.createAccount(new CreateAccountRequest(
+                "C4001", "Reverse Sender", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+        AccountResponse receiver = accountService.createAccount(new CreateAccountRequest(
+                "C4002", "Reverse Receiver", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+        accountService.deposit(sender.accountNo(), new DepositRequest("dep-reversal-001",
+                new BigDecimal("1000.00"), "CNY", "reversal setup"));
+        TransferResponse transfer = transferService.transfer(new TransferRequest("tr-reversal-001",
+                sender.accountNo(), receiver.accountNo(), new BigDecimal("250.00"), "CNY", "test transfer"));
+
+        ReversalResponse reversal = transferService.reverse(transfer.orderNo(), new ReversalRequest(
+                "rv-reversal-001", "customer dispute"));
+
+        assertThat(reversal.status()).isEqualTo(TransactionStatus.SUCCESS);
+        assertThat(accountService.getAccount(sender.accountNo()).availableBalance()).isEqualByComparingTo("1000.00");
+        assertThat(accountService.getAccount(receiver.accountNo()).availableBalance()).isEqualByComparingTo("0.00");
+        assertThat(transferService.getByOrderNo(transfer.orderNo()).status()).isEqualTo(TransactionStatus.REVERSED);
+        assertThat(ledgerService.findByTransactionNo(reversal.reversalNo())).hasSize(2);
+        assertThatThrownBy(() -> transferService.reverse(transfer.orderNo(), new ReversalRequest(
+                "rv-reversal-002", "duplicate")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("successful transfer");
     }
 }

@@ -39,6 +39,18 @@ export function AccountsPage() {
             currency: account?.currency || "CNY",
             remark: "frontend deposit"
           }), "存款成功")}>存款 100</button>
+          <button onClick={() => run(() => bankApi.holdFunds(accountNo, {
+            requestId: `ui-hold-${Date.now()}`,
+            amount: 50,
+            currency: account?.currency || "CNY",
+            reason: "frontend authorization hold"
+          }), "冻结金额成功")}>冻结金额 50</button>
+          <button onClick={() => run(() => bankApi.releaseFunds(accountNo, {
+            requestId: `ui-release-${Date.now()}`,
+            amount: 50,
+            currency: account?.currency || "CNY",
+            reason: "frontend authorization release"
+          }), "释放冻结金额成功")}>释放金额 50</button>
           <button onClick={() => run(() => bankApi.updateStatus(accountNo, "FROZEN", "frontend risk hold"), "账户已冻结")}>冻结</button>
           <button onClick={() => run(() => bankApi.updateStatus(accountNo, "ACTIVE", "frontend reactivation"), "账户已激活")}>解冻</button>
           <button onClick={() => run(() => bankApi.createAccount({

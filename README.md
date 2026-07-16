@@ -91,6 +91,20 @@ docker compose up -d
 mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
+Start the complete Docker stack:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+```text
+Frontend: http://localhost:5173
+Backend:  http://localhost:8081
+MySQL:    localhost:3306
+```
+
 Swagger UI:
 
 ```text

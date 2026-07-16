@@ -83,6 +83,69 @@ API:
 
 - `PATCH /api/v1/accounts/{accountNo}/status`
 
+## Hold and Release Funds
+
+Goal:
+
+- Reserve part of an account balance for card authorization, risk hold or pending settlement.
+
+Controls:
+
+- Held funds move from `available_balance` to `frozen_balance`.
+- Released funds move from `frozen_balance` back to `available_balance`.
+- Both operations are idempotent and audited.
+
+API:
+
+- `POST /api/v1/accounts/{accountNo}/holds`
+- `POST /api/v1/accounts/{accountNo}/holds/release`
+
+## Transfer Reversal
+
+Goal:
+
+- Reverse a successful domestic transfer once.
+
+Controls:
+
+- Only `SUCCESS` transfers can be reversed.
+- The original receiver is debited and the original sender is credited.
+- The original transfer moves to `REVERSED`.
+- A second reversal is rejected.
+
+API:
+
+- `POST /api/v1/transfers/{orderNo}/reversals`
+
+## Customer and KYC
+
+Goal:
+
+- Register customers, submit KYC material and review KYC status.
+
+Controls:
+
+- Customer IDs are unique.
+- KYC records are one-per-customer.
+- Review actions write audit and outbox records.
+
+API:
+
+- `POST /api/v1/customers`
+- `GET /api/v1/customers/{customerId}`
+- `PUT /api/v1/customers/{customerId}/kyc`
+- `POST /api/v1/customers/{customerId}/kyc/review`
+
+## Pricing Rules
+
+Goal:
+
+- Quote remittance exchange rate, fee and target amount from database-backed rules.
+
+API:
+
+- `GET /api/v1/pricing/remittance-quote`
+
 ## Ledger, Audit and Outbox Traceability
 
 Goal:

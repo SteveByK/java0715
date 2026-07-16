@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { bankApi } from "../api/client";
-import type { TransferOrder } from "../api/types";
+import type { Reversal, TransferOrder } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
 export function TransferPage() {
   const [orderNo, setOrderNo] = useState("TR_DEMO_SUCCESS");
   const [transfer, setTransfer] = useState<TransferOrder | null>(null);
+  const [reversal, setReversal] = useState<Reversal | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [result, setResult] = useState<string | null>(null);
 
@@ -42,6 +43,21 @@ export function TransferPage() {
     }
   }
 
+  async function reverse() {
+    setError(null);
+    setResult(null);
+    try {
+      const data = await bankApi.reverseTransfer(orderNo, {
+        requestId: `ui-rv-${Date.now()}`,
+        reason: "frontend dispute reversal"
+      });
+      setReversal(data);
+      setResult("冲正成功");
+    } catch (caught) {
+      setError(caught);
+    }
+  }
+
   return (
     <div className="two-column">
       <section className="panel">
@@ -54,10 +70,11 @@ export function TransferPage() {
           <button onClick={query}>查询订单</button>
           <button onClick={() => submit(false)}>发起 88 CNY 转账</button>
           <button className="danger" onClick={() => submit(true)}>发起高额风控案例</button>
+          <button className="danger" onClick={reverse}>冲正当前订单</button>
         </div>
         <ResultNotice result={result} error={error} />
       </section>
-      <DataPanel title="转账响应" data={transfer} error={error} />
+      <DataPanel title="转账响应" data={{ transfer, reversal }} error={error} />
     </div>
   );
 }
