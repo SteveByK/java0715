@@ -15,7 +15,7 @@ export function PricingPage() {
     try {
       const data = await bankApi.quoteRemittance(sourceCurrency, targetCurrency, amount);
       setQuote(data);
-      setResult("报价完成");
+      setResult(`报价完成，Quote ID: ${data.quoteId}`);
     } catch (caught) {
       setError(caught);
     }

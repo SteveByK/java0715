@@ -12,6 +12,9 @@ public record RemittanceResponse(
         BigDecimal exchangeRate,
         BigDecimal fee,
         BigDecimal targetAmount,
+        String quoteId,
+        String feeRuleCode,
+        String rateCode,
         String sourceCurrency,
         String targetCurrency,
         String destinationCountry,
@@ -23,7 +26,8 @@ public record RemittanceResponse(
     public static RemittanceResponse from(RemittanceOrderEntity entity) {
         return new RemittanceResponse(entity.getOrderNo(), entity.getRequestId(), entity.getSenderAccountNo(),
                 entity.getReceiverAccountNo(), entity.getSourceAmount(), entity.getExchangeRate(), entity.getFee(),
-                entity.getTargetAmount(), entity.getSourceCurrency(), entity.getTargetCurrency(),
-                entity.getDestinationCountry(), entity.getStatus(), entity.getRiskCode(), entity.getFailureReason());
+                entity.getTargetAmount(), entity.getQuoteId(), entity.getFeeRuleCode(), entity.getRateCode(),
+                entity.getSourceCurrency(), entity.getTargetCurrency(), entity.getDestinationCountry(),
+                entity.getStatus(), entity.getRiskCode(), entity.getFailureReason());
     }
 }

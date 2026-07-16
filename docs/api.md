@@ -121,6 +121,12 @@ Risk rejection example:
 
 `POST /remittances`
 
+Recommended production-like flow:
+
+1. Call `GET /pricing/remittance-quote` and receive a `quoteId`.
+2. Submit the remittance with that `quoteId`.
+3. The backend consumes the quote once and records `quoteId`, `feeRuleCode` and `rateCode` on the order.
+
 ```json
 {
   "requestId": "rm-1001",
@@ -129,7 +135,7 @@ Risk rejection example:
   "sourceAmount": 700.00,
   "sourceCurrency": "CNY",
   "targetCurrency": "USD",
-  "exchangeRate": 0.14000000,
+  "quoteId": "QT_RETURNED_BY_QUOTE_API",
   "destinationCountry": "US",
   "swiftCode": "BOFAUS3N",
   "iban": null,
@@ -137,7 +143,10 @@ Risk rejection example:
 }
 ```
 
-The service debits `sourceAmount + fee` from the sender and credits `sourceAmount * exchangeRate` to the receiver.
+The service debits `sourceAmount + fee` from the sender and credits the locked `targetAmount` to the receiver.
+`exchangeRate` is kept optional only for older demo-style requests; new business flow should use `quoteId`.
+
+Duplicate requests with the same `requestId` return the existing remittance order instead of performing another debit.
 
 ### Get Remittance Order
 
@@ -166,6 +175,23 @@ The service debits `sourceAmount + fee` from the sender and credits `sourceAmoun
 ### Remittance Quote
 
 `GET /pricing/remittance-quote?sourceCurrency=CNY&targetCurrency=USD&sourceAmount=700`
+
+Response data includes:
+
+```json
+{
+  "quoteId": "QT...",
+  "sourceCurrency": "CNY",
+  "targetCurrency": "USD",
+  "sourceAmount": 700.00,
+  "exchangeRate": 0.14000000,
+  "fee": 2.10,
+  "targetAmount": 98.00,
+  "feeRuleCode": "FEE_RM_CNY_USD",
+  "rateCode": "FX_CNY_USD_DEMO",
+  "expiresAt": "2026-07-17T00:00:00Z"
+}
+```
 
 ## Ledger
 
@@ -212,3 +238,9 @@ Demo:
 ```text
 GET /outbox/RM_DEMO_SUCCESS
 ```
+
+### Publish Pending Outbox Events
+
+`POST /outbox/publish-pending`
+
+This endpoint simulates a reliable message relay by moving `NEW` or `FAILED` rows to `PUBLISHED`.

@@ -62,6 +62,12 @@ public class TransferService {
 
     @Transactional
     public ReversalResponse reverse(String orderNo, ReversalRequest request) {
+        ReversalResponse existing = reversalOrderRepository.findByRequestId(request.requestId())
+                .map(ReversalResponse::from)
+                .orElse(null);
+        if (existing != null) {
+            return existing;
+        }
         TransferOrderEntity original = transferOrderRepository.findByOrderNo(orderNo)
                 .orElseThrow(() -> new BusinessException("TRANSFER_NOT_FOUND", "transfer order not found"));
         if (original.getStatus() != TransactionStatus.SUCCESS) {
@@ -77,6 +83,12 @@ public class TransferService {
 
     private TransferResponse doTransfer(TransferRequest request) {
         MoneyUtils.requirePositive(request.amount());
+        TransferResponse existing = transferOrderRepository.findByRequestId(request.requestId())
+                .map(TransferResponse::from)
+                .orElse(null);
+        if (existing != null) {
+            return existing;
+        }
         String orderNo = "TR" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);
         idempotencyService.ensureFirstRequest(request.requestId(), "DOMESTIC_TRANSFER", orderNo);
         BigDecimal amount = MoneyUtils.normalize(request.amount(), request.currency().toUpperCase());
@@ -87,7 +99,9 @@ public class TransferService {
             order.setRiskCode(riskDecision.code());
             order.setFailureReason(riskDecision.reason());
             auditService.record(orderNo, "DOMESTIC_TRANSFER", "RISK_REJECTED", riskDecision.reason());
-            return TransferResponse.from(order);
+            TransferResponse response = TransferResponse.from(order);
+            idempotencyService.markCompleted(request.requestId(), "DOMESTIC_TRANSFER", response.toString());
+            return response;
         }
         AccountEntity fromAccount = accountService.loadForUpdate(request.fromAccountNo());
         AccountEntity toAccount = accountService.loadForUpdate(request.toAccountNo());
@@ -101,7 +115,9 @@ public class TransferService {
         order.setUpdatedAt(Instant.now());
         auditService.record(orderNo, "DOMESTIC_TRANSFER", "SUCCESS", request.remark());
         outboxService.publish(orderNo, "TransferSucceededEvent", "{\"orderNo\":\"" + orderNo + "\"}");
-        return TransferResponse.from(order);
+        TransferResponse response = TransferResponse.from(order);
+        idempotencyService.markCompleted(request.requestId(), "DOMESTIC_TRANSFER", response.toString());
+        return response;
     }
 
     private TransferOrderEntity createOrder(TransferRequest request, String orderNo, BigDecimal amount) {
@@ -147,6 +163,8 @@ public class TransferService {
         original.setUpdatedAt(Instant.now());
         auditService.record(reversalNo, "TRANSFER_REVERSAL", "SUCCESS", request.reason());
         outboxService.publish(reversalNo, "TransferReversedEvent", "{\"reversalNo\":\"" + reversalNo + "\"}");
-        return ReversalResponse.from(saved);
+        ReversalResponse response = ReversalResponse.from(saved);
+        idempotencyService.markCompleted(request.requestId(), "TRANSFER_REVERSAL", response.toString());
+        return response;
     }
 }

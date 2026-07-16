@@ -56,6 +56,9 @@ export type RemittanceOrder = {
   exchangeRate: number;
   fee: number;
   targetAmount: number;
+  quoteId?: string | null;
+  feeRuleCode?: string | null;
+  rateCode?: string | null;
   sourceCurrency: string;
   targetCurrency: string;
   destinationCountry: string;
@@ -90,7 +93,11 @@ export type OutboxEvent = {
   eventType: string;
   payload: string;
   status: string;
+  retryCount: number;
+  lastError?: string | null;
+  publishedAt?: string | null;
   createdAt: string;
+  updatedAt?: string | null;
 };
 
 export type Customer = {
@@ -107,6 +114,7 @@ export type Customer = {
 };
 
 export type Quote = {
+  quoteId: string;
   sourceCurrency: string;
   targetCurrency: string;
   sourceAmount: number;
@@ -115,6 +123,7 @@ export type Quote = {
   targetAmount: number;
   feeRuleCode: string;
   rateCode: string;
+  expiresAt: string;
 };
 
 export type Reversal = {

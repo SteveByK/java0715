@@ -38,5 +38,15 @@ public class OutboxEventEntity {
     private String status;
 
     @Column(nullable = false)
+    private Integer retryCount;
+
+    @Column(length = 500)
+    private String lastError;
+
+    private Instant publishedAt;
+
+    @Column(nullable = false)
     private Instant createdAt;
+
+    private Instant updatedAt;
 }

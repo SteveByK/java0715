@@ -4,6 +4,7 @@ import com.stevebyk.java0715.common.ApiResponse;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,5 +21,10 @@ public class OutboxController {
     @GetMapping("/{aggregateId}")
     public ApiResponse<List<OutboxEventResponse>> byAggregateId(@PathVariable String aggregateId) {
         return ApiResponse.ok(outboxService.findByAggregateId(aggregateId));
+    }
+
+    @PostMapping("/publish-pending")
+    public ApiResponse<List<OutboxEventResponse>> publishPending() {
+        return ApiResponse.ok(outboxService.publishPending());
     }
 }

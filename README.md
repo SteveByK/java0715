@@ -27,10 +27,11 @@ Main design choices:
 - DDD-style bounded modules: account, transfer, remittance, risk, ledger, audit, idempotency and outbox.
 - Hexagonal-style separation: controllers call application services; domain rules stay out of controllers.
 - Ledger-first thinking: balance is a snapshot, every money movement also writes immutable ledger entries.
-- Idempotency by `requestId + businessType`.
+- Idempotency by `requestId + businessType`; retry returns the original business result where possible.
 - Account locking by deterministic account ordering plus database pessimistic write locks.
 - State machine style transaction statuses.
-- Outbox table for future Kafka/RocketMQ integration.
+- Database-backed remittance quote locking with fee rule and exchange-rate traceability.
+- Outbox table with pending publish processing for future Kafka/RocketMQ integration.
 - Audit log for every core operation.
 
 ## Core Scenarios
@@ -38,11 +39,11 @@ Main design choices:
 - Open domestic or overseas accounts.
 - Deposit into a domestic CNY account or foreign currency account.
 - Transfer between domestic accounts.
-- Remit from a domestic or overseas account to another account with exchange rate and fee.
+- Remit from a domestic or overseas account to another account with locked exchange rate and fee.
 - Reject high-risk domestic transfers before debit.
 - Reject remittance to blocked destination countries.
 - Freeze and unfreeze accounts.
-- Prevent repeated processing through idempotency records.
+- Prevent repeated money movement through idempotency records and original-result return.
 - Write ledger entries for debit and credit operations.
 - Query ledger, audit and outbox records for traceability.
 
@@ -61,6 +62,8 @@ docs/frontend.md
 ## Generated Demo Data
 
 Flyway migration `V2__seed_demo_banking_data.sql` creates demo accounts, orders, ledger entries, audit logs and outbox events.
+`V3__advanced_banking_features.sql` adds customer/KYC, pricing and reversal tables.
+`V4__production_hardening.sql` adds remittance quote locking plus Outbox and idempotency operational fields.
 
 Useful demo identifiers:
 
@@ -162,11 +165,20 @@ curl -X POST http://localhost:8080/api/v1/transfers/domestic ^
 
 International remittance:
 
+First quote the remittance:
+
+```bash
+curl "http://localhost:8080/api/v1/pricing/remittance-quote?sourceCurrency=CNY&targetCurrency=USD&sourceAmount=700" ^
+  -H "X-API-Key: dev-api-key"
+```
+
+Then submit with the returned `quoteId`:
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/remittances ^
   -H "Content-Type: application/json" ^
   -H "X-API-Key: dev-api-key" ^
-  -d "{\"requestId\":\"rm-1001\",\"senderAccountNo\":\"AC_CNY\",\"receiverAccountNo\":\"AC_USD\",\"sourceAmount\":700.00,\"sourceCurrency\":\"CNY\",\"targetCurrency\":\"USD\",\"exchangeRate\":0.14,\"destinationCountry\":\"US\",\"swiftCode\":\"BOFAUS3N\",\"remark\":\"family support\"}"
+  -d "{\"requestId\":\"rm-1001\",\"senderAccountNo\":\"AC_CNY\",\"receiverAccountNo\":\"AC_USD\",\"sourceAmount\":700.00,\"sourceCurrency\":\"CNY\",\"targetCurrency\":\"USD\",\"quoteId\":\"QT_RETURNED_BY_QUOTE_API\",\"destinationCountry\":\"US\",\"swiftCode\":\"BOFAUS3N\",\"remark\":\"family support\"}"
 ```
 
 Query seed transfer ledger:
@@ -190,6 +202,8 @@ curl -X PATCH http://localhost:8080/api/v1/accounts/AC_DEMO_CNY_FROZEN/status ^
 ```bash
 mvn test
 mvn checkstyle:check
+cd frontend
+bun run build
 ```
 
 ## Future Microservice Path

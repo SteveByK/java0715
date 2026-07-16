@@ -11,29 +11,58 @@ export function RemittancePage() {
   const [error, setError] = useState<unknown>(null);
   const [result, setResult] = useState<string | null>(null);
 
+  async function quoteCurrent() {
+    setError(null);
+    setResult(null);
+    try {
+      const data = await bankApi.quoteRemittance("CNY", "USD", 700);
+      setQuote(data);
+      setResult(`报价已锁定，有效期至 ${new Date(data.expiresAt).toLocaleString()}`);
+    } catch (caught) {
+      setError(caught);
+    }
+  }
+
   async function submit(blockedCountry = false) {
     setError(null);
     setResult(null);
     try {
-      const data = await bankApi.remit({
+      const payload = blockedCountry ? {
         requestId: `ui-rm-${Date.now()}`,
-        senderAccountNo: blockedCountry ? "AC_DEMO_USD_002" : "AC_DEMO_CNY_001",
-        receiverAccountNo: blockedCountry ? "AC_DEMO_CNY_002" : "AC_DEMO_USD_001",
-        sourceAmount: blockedCountry ? 60000 : 50,
-        sourceCurrency: blockedCountry ? "USD" : "CNY",
-        targetCurrency: blockedCountry ? "CNY" : "USD",
-        exchangeRate: blockedCountry ? 7.2 : 0.14,
-        destinationCountry: blockedCountry ? "IR" : "US",
-        swiftCode: blockedCountry ? "DEMOIRXX" : "BOFAUS3N",
+        senderAccountNo: "AC_DEMO_USD_002",
+        receiverAccountNo: "AC_DEMO_CNY_002",
+        sourceAmount: 60000,
+        sourceCurrency: "USD",
+        targetCurrency: "CNY",
+        destinationCountry: "IR",
+        swiftCode: "DEMOIRXX",
         iban: null,
-        remark: blockedCountry ? "frontend blocked country case" : "frontend remittance"
-      });
+        remark: "frontend blocked country case"
+      } : await buildQuotedPayload();
+      const data = await bankApi.remit(payload);
       setRemittance(data);
       setOrderNo(data.orderNo);
-      setResult(blockedCountry ? "已触发汇款风控拒绝" : "汇款已提交");
+      setResult(blockedCountry ? "已触发汇款风控拒绝" : "汇款已按锁定报价提交");
     } catch (caught) {
       setError(caught);
     }
+  }
+
+  async function buildQuotedPayload() {
+    const activeQuote = quote ?? await bankApi.quoteRemittance("CNY", "USD", 50);
+    return {
+        requestId: `ui-rm-${Date.now()}`,
+        senderAccountNo: "AC_DEMO_CNY_001",
+        receiverAccountNo: "AC_DEMO_USD_001",
+        sourceAmount: activeQuote.sourceAmount,
+        sourceCurrency: activeQuote.sourceCurrency,
+        targetCurrency: activeQuote.targetCurrency,
+        quoteId: activeQuote.quoteId,
+        destinationCountry: "US",
+        swiftCode: "BOFAUS3N",
+        iban: null,
+        remark: "frontend remittance with locked quote"
+    };
   }
 
   async function query() {
@@ -43,18 +72,6 @@ export function RemittancePage() {
       const data = await bankApi.getRemittance(orderNo);
       setRemittance(data);
       setResult("汇款订单查询完成");
-    } catch (caught) {
-      setError(caught);
-    }
-  }
-
-  async function quoteCurrent() {
-    setError(null);
-    setResult(null);
-    try {
-      const data = await bankApi.quoteRemittance("CNY", "USD", 700);
-      setQuote(data);
-      setResult("报价查询完成");
     } catch (caught) {
       setError(caught);
     }
@@ -70,9 +87,9 @@ export function RemittancePage() {
             <input value={orderNo} onChange={(event) => setOrderNo(event.target.value)} />
           </label>
           <button onClick={query}>查询汇款</button>
-          <button onClick={() => submit(false)}>发起 50 CNY 汇款</button>
+          <button onClick={quoteCurrent}>锁定 700 CNY 报价</button>
+          <button onClick={() => submit(false)}>按报价发起汇款</button>
           <button className="danger" onClick={() => submit(true)}>发起国家风控案例</button>
-          <button onClick={quoteCurrent}>查询 700 CNY 报价</button>
         </div>
         <ResultNotice result={result} error={error} />
       </section>

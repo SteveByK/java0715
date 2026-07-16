@@ -9,6 +9,7 @@ import com.stevebyk.java0715.idempotency.IdempotencyService;
 import com.stevebyk.java0715.lock.AccountLockExecutor;
 import com.stevebyk.java0715.outbox.OutboxService;
 import com.stevebyk.java0715.pricing.PricingService;
+import com.stevebyk.java0715.pricing.QuoteResponse;
 import com.stevebyk.java0715.risk.RiskDecision;
 import com.stevebyk.java0715.risk.RiskService;
 import com.stevebyk.java0715.transfer.TransactionStatus;
@@ -61,21 +62,34 @@ public class RemittanceService {
 
     private RemittanceResponse doRemit(RemittanceRequest request) {
         MoneyUtils.requirePositive(request.sourceAmount());
+        RemittanceResponse existing = remittanceOrderRepository.findByRequestId(request.requestId())
+                .map(RemittanceResponse::from)
+                .orElse(null);
+        if (existing != null) {
+            return existing;
+        }
         String orderNo = "RM" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);
         idempotencyService.ensureFirstRequest(request.requestId(), "INTERNATIONAL_REMITTANCE", orderNo);
         BigDecimal sourceAmount = MoneyUtils.normalize(request.sourceAmount(), request.sourceCurrency().toUpperCase());
-        BigDecimal fee = pricingService.calculateRemittanceFee(request.sourceCurrency(), request.targetCurrency(), sourceAmount);
-        BigDecimal debitAmount = sourceAmount.add(fee);
-        BigDecimal targetAmount = MoneyUtils.normalize(sourceAmount.multiply(request.exchangeRate()),
-                request.targetCurrency().toUpperCase());
-        RemittanceOrderEntity order = createOrder(request, orderNo, sourceAmount, fee, targetAmount);
         RiskDecision riskDecision = riskService.checkRemittance(sourceAmount, request.destinationCountry().toUpperCase());
+        QuoteResponse quote = null;
+        if (riskDecision.approved()) {
+            quote = resolveQuote(request, sourceAmount);
+        } else if (request.exchangeRate() != null) {
+            quote = fallbackRejectedQuote(request, sourceAmount);
+        } else {
+            quote = pricingService.quoteRemittance(request.sourceCurrency(), request.targetCurrency(), sourceAmount);
+        }
+        BigDecimal debitAmount = sourceAmount.add(quote.fee());
+        RemittanceOrderEntity order = createOrder(request, orderNo, sourceAmount, quote);
         if (!riskDecision.approved()) {
             order.setStatus(TransactionStatus.RISK_REJECTED);
             order.setRiskCode(riskDecision.code());
             order.setFailureReason(riskDecision.reason());
             auditService.record(orderNo, "INTERNATIONAL_REMITTANCE", "RISK_REJECTED", riskDecision.reason());
-            return RemittanceResponse.from(order);
+            RemittanceResponse response = RemittanceResponse.from(order);
+            idempotencyService.markCompleted(request.requestId(), "INTERNATIONAL_REMITTANCE", response.toString());
+            return response;
         }
         AccountEntity sender = accountService.loadForUpdate(request.senderAccountNo());
         AccountEntity receiver = accountService.loadForUpdate(request.receiverAccountNo());
@@ -84,27 +98,48 @@ public class RemittanceService {
         order.setStatus(TransactionStatus.PROCESSING);
         accountService.debit(sender, debitAmount, orderNo, "REMITTANCE_DEBIT");
         order.setStatus(TransactionStatus.DEBIT_SUCCESS);
-        accountService.credit(receiver, targetAmount, orderNo, "REMITTANCE_CREDIT");
+        accountService.credit(receiver, quote.targetAmount(), orderNo, "REMITTANCE_CREDIT");
         order.setStatus(TransactionStatus.SUCCESS);
         order.setUpdatedAt(Instant.now());
         auditService.record(orderNo, "INTERNATIONAL_REMITTANCE", "SUCCESS", request.remark());
         outboxService.publish(orderNo, "RemittanceCompletedEvent", "{\"orderNo\":\"" + orderNo + "\"}");
-        return RemittanceResponse.from(order);
+        RemittanceResponse response = RemittanceResponse.from(order);
+        idempotencyService.markCompleted(request.requestId(), "INTERNATIONAL_REMITTANCE", response.toString());
+        return response;
+    }
+
+    private QuoteResponse resolveQuote(RemittanceRequest request, BigDecimal sourceAmount) {
+        if (request.quoteId() == null || request.quoteId().isBlank()) {
+            QuoteResponse quote = pricingService.quoteRemittance(request.sourceCurrency(), request.targetCurrency(), sourceAmount);
+            return pricingService.useQuote(quote.quoteId(), request.sourceCurrency(), request.targetCurrency(), sourceAmount);
+        }
+        return pricingService.useQuote(request.quoteId(), request.sourceCurrency(), request.targetCurrency(), sourceAmount);
+    }
+
+    private QuoteResponse fallbackRejectedQuote(RemittanceRequest request, BigDecimal sourceAmount) {
+        BigDecimal targetAmount = MoneyUtils.normalize(sourceAmount.multiply(request.exchangeRate()),
+                request.targetCurrency().toUpperCase());
+        return new QuoteResponse(null, request.sourceCurrency().toUpperCase(), request.targetCurrency().toUpperCase(),
+                sourceAmount, request.exchangeRate(), BigDecimal.ZERO.setScale(sourceAmount.scale()), targetAmount,
+                "RISK_REJECTED_NO_FEE", "CLIENT_SUPPLIED_REJECTED", Instant.now());
     }
 
     private RemittanceOrderEntity createOrder(RemittanceRequest request, String orderNo, BigDecimal sourceAmount,
-                                              BigDecimal fee, BigDecimal targetAmount) {
+                                              QuoteResponse quote) {
         RemittanceOrderEntity entity = new RemittanceOrderEntity();
         entity.setOrderNo(orderNo);
         entity.setRequestId(request.requestId());
         entity.setSenderAccountNo(request.senderAccountNo());
         entity.setReceiverAccountNo(request.receiverAccountNo());
         entity.setSourceAmount(sourceAmount);
-        entity.setExchangeRate(request.exchangeRate());
-        entity.setFee(fee);
-        entity.setTargetAmount(targetAmount);
-        entity.setSourceCurrency(request.sourceCurrency().toUpperCase());
-        entity.setTargetCurrency(request.targetCurrency().toUpperCase());
+        entity.setExchangeRate(quote.exchangeRate());
+        entity.setFee(quote.fee());
+        entity.setTargetAmount(quote.targetAmount());
+        entity.setQuoteId(quote.quoteId());
+        entity.setFeeRuleCode(quote.feeRuleCode());
+        entity.setRateCode(quote.rateCode());
+        entity.setSourceCurrency(quote.sourceCurrency());
+        entity.setTargetCurrency(quote.targetCurrency());
         entity.setDestinationCountry(request.destinationCountry().toUpperCase());
         entity.setSwiftCode(request.swiftCode());
         entity.setIban(request.iban());

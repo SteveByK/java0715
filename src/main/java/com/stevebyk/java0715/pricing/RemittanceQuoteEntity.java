@@ -1,6 +1,5 @@
-package com.stevebyk.java0715.remittance;
+package com.stevebyk.java0715.pricing;
 
-import com.stevebyk.java0715.transfer.TransactionStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,24 +16,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "remittance_order")
-public class RemittanceOrderEntity {
+@Table(name = "remittance_quote")
+public class RemittanceQuoteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true, length = 40)
-    private String orderNo;
+    private String quoteId;
 
-    @Column(nullable = false, length = 80)
-    private String requestId;
+    @Column(nullable = false, length = 3)
+    private String sourceCurrency;
 
-    @Column(nullable = false, length = 32)
-    private String senderAccountNo;
-
-    @Column(nullable = false, length = 32)
-    private String receiverAccountNo;
+    @Column(nullable = false, length = 3)
+    private String targetCurrency;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal sourceAmount;
@@ -48,43 +44,19 @@ public class RemittanceOrderEntity {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal targetAmount;
 
-    @Column(length = 40)
-    private String quoteId;
-
-    @Column(length = 40)
+    @Column(nullable = false, length = 40)
     private String feeRuleCode;
 
-    @Column(length = 40)
+    @Column(nullable = false, length = 40)
     private String rateCode;
-
-    @Column(nullable = false, length = 3)
-    private String sourceCurrency;
-
-    @Column(nullable = false, length = 3)
-    private String targetCurrency;
-
-    @Column(nullable = false, length = 2)
-    private String destinationCountry;
-
-    @Column(length = 32)
-    private String swiftCode;
-
-    @Column(length = 40)
-    private String iban;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
-    private TransactionStatus status;
+    private QuoteStatus status;
 
-    @Column(length = 80)
-    private String riskCode;
-
-    @Column(length = 500)
-    private String failureReason;
+    @Column(nullable = false)
+    private Instant expiresAt;
 
     @Column(nullable = false)
     private Instant createdAt;
-
-    @Column(nullable = false)
-    private Instant updatedAt;
 }

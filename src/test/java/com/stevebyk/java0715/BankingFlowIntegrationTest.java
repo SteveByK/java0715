@@ -18,6 +18,8 @@ import com.stevebyk.java0715.customer.KycStatus;
 import com.stevebyk.java0715.customer.ReviewKycRequest;
 import com.stevebyk.java0715.customer.SubmitKycRequest;
 import com.stevebyk.java0715.ledger.LedgerService;
+import com.stevebyk.java0715.outbox.OutboxEventResponse;
+import com.stevebyk.java0715.outbox.OutboxService;
 import com.stevebyk.java0715.pricing.PricingService;
 import com.stevebyk.java0715.pricing.QuoteResponse;
 import com.stevebyk.java0715.remittance.RemittanceRequest;
@@ -58,6 +60,9 @@ class BankingFlowIntegrationTest {
     @Autowired
     private PricingService pricingService;
 
+    @Autowired
+    private OutboxService outboxService;
+
     @Test
     void shouldDepositTransferAndRemit() {
         AccountResponse cnySender = accountService.createAccount(new CreateAccountRequest(
@@ -71,12 +76,14 @@ class BankingFlowIntegrationTest {
                 new BigDecimal("10000.00"), "CNY", "initial deposit"));
         TransferResponse transfer = transferService.transfer(new TransferRequest("tr-1001",
                 cnySender.accountNo(), cnyReceiver.accountNo(), new BigDecimal("1200.00"), "CNY", "rent"));
+        QuoteResponse quote = pricingService.quoteRemittance("CNY", "USD", new BigDecimal("700.00"));
         RemittanceResponse remittance = remittanceService.remit(new RemittanceRequest("rm-1001",
                 cnySender.accountNo(), usdReceiver.accountNo(), new BigDecimal("700.00"), "CNY", "USD",
-                new BigDecimal("0.14000000"), "US", "BOFAUS3N", null, "family support"));
+                null, quote.quoteId(), "US", "BOFAUS3N", null, "family support"));
 
         assertThat(transfer.status()).isEqualTo(TransactionStatus.SUCCESS);
         assertThat(remittance.status()).isEqualTo(TransactionStatus.SUCCESS);
+        assertThat(remittance.quoteId()).isEqualTo(quote.quoteId());
         assertThat(accountService.getAccount(cnyReceiver.accountNo()).availableBalance())
                 .isEqualByComparingTo("1200.00");
         assertThat(accountService.getAccount(usdReceiver.accountNo()).availableBalance())
@@ -149,10 +156,12 @@ class BankingFlowIntegrationTest {
     void shouldQuoteRemittanceUsingSeededRules() {
         QuoteResponse quote = pricingService.quoteRemittance("CNY", "USD", new BigDecimal("700.00"));
 
+        assertThat(quote.quoteId()).isNotBlank();
         assertThat(quote.exchangeRate()).isEqualByComparingTo("0.14000000");
         assertThat(quote.fee()).isEqualByComparingTo("2.10");
         assertThat(quote.targetAmount()).isEqualByComparingTo("98.00");
         assertThat(quote.feeRuleCode()).isEqualTo("FEE_RM_CNY_USD");
+        assertThat(quote.expiresAt()).isNotNull();
     }
 
     @Test
@@ -196,5 +205,62 @@ class BankingFlowIntegrationTest {
                 "rv-reversal-002", "duplicate")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("successful transfer");
+    }
+
+    @Test
+    void shouldReturnOriginalDomesticTransferForDuplicateRequest() {
+        AccountResponse sender = accountService.createAccount(new CreateAccountRequest(
+                "C5001", "Idempotent Sender", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+        AccountResponse receiver = accountService.createAccount(new CreateAccountRequest(
+                "C5002", "Idempotent Receiver", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+        accountService.deposit(sender.accountNo(), new DepositRequest("dep-idem-001",
+                new BigDecimal("1000.00"), "CNY", "idempotency setup"));
+
+        TransferRequest request = new TransferRequest("tr-idem-001",
+                sender.accountNo(), receiver.accountNo(), new BigDecimal("120.00"), "CNY", "retry case");
+        TransferResponse first = transferService.transfer(request);
+        TransferResponse second = transferService.transfer(request);
+
+        assertThat(second.orderNo()).isEqualTo(first.orderNo());
+        assertThat(accountService.getAccount(sender.accountNo()).availableBalance()).isEqualByComparingTo("880.00");
+        assertThat(accountService.getAccount(receiver.accountNo()).availableBalance()).isEqualByComparingTo("120.00");
+    }
+
+    @Test
+    void shouldConsumeRemittanceQuoteOnlyOnce() {
+        AccountResponse cnySender = accountService.createAccount(new CreateAccountRequest(
+                "C6001", "Quote Sender", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+        AccountResponse usdReceiver = accountService.createAccount(new CreateAccountRequest(
+                "U6001", "Quote Receiver", UserRegion.OVERSEAS, AccountType.FOREIGN_CURRENCY, "USD"));
+        accountService.deposit(cnySender.accountNo(), new DepositRequest("dep-quote-001",
+                new BigDecimal("2000.00"), "CNY", "quote setup"));
+        QuoteResponse quote = pricingService.quoteRemittance("CNY", "USD", new BigDecimal("100.00"));
+
+        RemittanceResponse first = remittanceService.remit(new RemittanceRequest("rm-quote-001",
+                cnySender.accountNo(), usdReceiver.accountNo(), new BigDecimal("100.00"), "CNY", "USD",
+                null, quote.quoteId(), "US", "BOFAUS3N", null, "first quote use"));
+
+        assertThat(first.status()).isEqualTo(TransactionStatus.SUCCESS);
+        assertThatThrownBy(() -> remittanceService.remit(new RemittanceRequest("rm-quote-002",
+                cnySender.accountNo(), usdReceiver.accountNo(), new BigDecimal("100.00"), "CNY", "USD",
+                null, quote.quoteId(), "US", "BOFAUS3N", null, "quote reuse")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("remittance quote is not active");
+    }
+
+    @Test
+    void shouldPublishPendingOutboxEvents() {
+        AccountResponse account = accountService.createAccount(new CreateAccountRequest(
+                "C7001", "Outbox User", UserRegion.DOMESTIC, AccountType.SAVINGS, "CNY"));
+
+        var beforePublish = outboxService.findByAggregateId(account.accountNo());
+        assertThat(beforePublish).extracting(OutboxEventResponse::status).contains("NEW");
+
+        var published = outboxService.publishPending();
+
+        assertThat(published).extracting(OutboxEventResponse::status).contains("PUBLISHED");
+        assertThat(outboxService.findByAggregateId(account.accountNo()))
+                .extracting(OutboxEventResponse::status)
+                .contains("PUBLISHED");
     }
 }

@@ -50,7 +50,8 @@ export const bankApi = {
   ledgerByTransaction: (transactionNo: string) => unwrap<LedgerEntry[]>(api.get(`/ledger/transactions/${transactionNo}`)),
   ledgerByAccount: (accountNo: string) => unwrap<LedgerEntry[]>(api.get(`/ledger/accounts/${accountNo}`)),
   auditByBusinessNo: (businessNo: string) => unwrap<AuditLog[]>(api.get(`/audit/${businessNo}`)),
-  outboxByAggregateId: (aggregateId: string) => unwrap<OutboxEvent[]>(api.get(`/outbox/${aggregateId}`))
+  outboxByAggregateId: (aggregateId: string) => unwrap<OutboxEvent[]>(api.get(`/outbox/${aggregateId}`)),
+  publishPendingOutbox: () => unwrap<OutboxEvent[]>(api.post("/outbox/publish-pending"))
 };
 
 export const demoIds = {

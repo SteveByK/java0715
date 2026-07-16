@@ -6,6 +6,7 @@ Flyway migration file:
 src/main/resources/db/migration/V1__init_bank_schema.sql
 src/main/resources/db/migration/V2__seed_demo_banking_data.sql
 src/main/resources/db/migration/V3__advanced_banking_features.sql
+src/main/resources/db/migration/V4__production_hardening.sql
 ```
 
 ## Tables
@@ -32,6 +33,13 @@ These rows include matching ledger entries, audit logs, idempotency records and 
 - `fee_rule`
 - `exchange_rate`
 - `reversal_order`
+
+`V4__production_hardening.sql` adds:
+
+- `remittance_quote`
+- quote trace columns on `remittance_order`: `quote_id`, `fee_rule_code`, `rate_code`
+- retry and publish tracking on `outbox_event`
+- response snapshot and update time on `idempotency_record`
 
 ### account_balance
 
@@ -73,10 +81,25 @@ The order records request, status, risk result and failure reason. It should not
 International remittance business order.
 
 Stores source amount, target amount, exchange rate, fee, destination country and optional SWIFT/IBAN fields.
+For new remittances it also stores the consumed `quote_id`, `fee_rule_code` and `rate_code` so settlement can be audited against the pricing decision.
+
+### remittance_quote
+
+Stores short-lived quote decisions for international remittance.
+
+Important columns:
+
+- `quote_id`: external quote identifier returned by the pricing API.
+- `source_currency`, `target_currency`, `source_amount`: quote input.
+- `exchange_rate`, `fee`, `target_amount`: locked pricing result.
+- `fee_rule_code`, `rate_code`: rule traceability.
+- `status`: `ACTIVE` or `USED`.
+- `expires_at`: quote expiry boundary.
 
 ### idempotency_record
 
 Prevents repeated processing of external requests.
+The `response_snapshot` and `updated_at` columns support original-result return and retry diagnostics.
 
 Unique key:
 
@@ -96,6 +119,13 @@ Stores domain events for future reliable message publishing. Current events incl
 - `DepositCompletedEvent`
 - `TransferSucceededEvent`
 - `RemittanceCompletedEvent`
+
+Operational columns:
+
+- `retry_count`: relay retry counter.
+- `last_error`: last publish failure message.
+- `published_at`: publish completion time.
+- `updated_at`: last relay update time.
 
 ## Index Notes
 

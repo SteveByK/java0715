@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface RemittanceOrderRepository extends JpaRepository<RemittanceOrderEntity, Long> {
 
     Optional<RemittanceOrderEntity> findByOrderNo(String orderNo);
+
+    Optional<RemittanceOrderEntity> findByRequestId(String requestId);
 }

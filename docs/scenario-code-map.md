@@ -148,6 +148,8 @@ Core code:
 - `remittance/RemittanceController.java`
 - `remittance/RemittanceService.java`
 - `remittance/RemittanceOrderEntity.java`
+- `pricing/PricingService.java`
+- `pricing/RemittanceQuoteEntity.java`
 - `risk/RiskService.checkRemittance`
 - `account/AccountService.debit`
 - `account/AccountService.credit`
@@ -155,6 +157,7 @@ Core code:
 Tables:
 
 - `remittance_order`
+- `remittance_quote`
 - `account_balance`
 - `ledger_entry`
 - `idempotency_record`
@@ -239,6 +242,7 @@ Core code:
 - `ledger/LedgerController.java`
 - `audit/AuditController.java`
 - `outbox/OutboxController.java`
+- `outbox/OutboxService.publishPending`
 
 Tables:
 
@@ -314,7 +318,7 @@ Tables:
 
 Purpose:
 
-- Quote remittance exchange rate, fee and target amount.
+- Quote and lock remittance exchange rate, fee and target amount.
 
 API:
 
@@ -324,6 +328,8 @@ Core code:
 
 - `pricing/PricingController.java`
 - `pricing/PricingService.java`
+- `pricing/RemittanceQuoteEntity.java`
+- `pricing/RemittanceQuoteRepository.java`
 - `pricing/ExchangeRateEntity.java`
 - `pricing/FeeRuleEntity.java`
 
@@ -331,6 +337,7 @@ Tables:
 
 - `exchange_rate`
 - `fee_rule`
+- `remittance_quote`
 
 Seed data:
 

@@ -12,6 +12,11 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_0900_ai_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     volumes:
       - mysql-data:/var/lib/mysql
 
@@ -21,7 +26,8 @@ services:
       dockerfile: Dockerfile
     container_name: java0715-backend
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: mysql
       DB_URL: jdbc:mysql://mysql:3306/java0715?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
@@ -37,7 +43,8 @@ services:
       dockerfile: Dockerfile
     container_name: java0715-frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     environment:
       VITE_API_PROXY_TARGET: http://backend:8080
     ports:

@@ -58,6 +58,9 @@ public class AccountService {
     @Transactional
     public AccountResponse deposit(String accountNo, DepositRequest request) {
         MoneyUtils.requirePositive(request.amount());
+        if (idempotencyService.findExisting(request.requestId(), "DEPOSIT").isPresent()) {
+            return getAccount(accountNo);
+        }
         idempotencyService.ensureFirstRequest(request.requestId(), "DEPOSIT", accountNo);
         AccountEntity account = loadForUpdate(accountNo);
         ensureActive(account);
@@ -87,6 +90,9 @@ public class AccountService {
     @Transactional
     public AccountResponse holdFunds(String accountNo, HoldFundsRequest request) {
         MoneyUtils.requirePositive(request.amount());
+        if (idempotencyService.findExisting(request.requestId(), "HOLD_FUNDS").isPresent()) {
+            return getAccount(accountNo);
+        }
         idempotencyService.ensureFirstRequest(request.requestId(), "HOLD_FUNDS", accountNo);
         AccountEntity account = loadForUpdate(accountNo);
         ensureActive(account);
@@ -108,6 +114,9 @@ public class AccountService {
     @Transactional
     public AccountResponse releaseFunds(String accountNo, HoldFundsRequest request) {
         MoneyUtils.requirePositive(request.amount());
+        if (idempotencyService.findExisting(request.requestId(), "RELEASE_FUNDS").isPresent()) {
+            return getAccount(accountNo);
+        }
         idempotencyService.ensureFirstRequest(request.requestId(), "RELEASE_FUNDS", accountNo);
         AccountEntity account = loadForUpdate(accountNo);
         ensureActive(account);

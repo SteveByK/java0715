@@ -32,6 +32,11 @@ public class IdempotencyRecord {
     @Column(nullable = false, length = 32)
     private String status;
 
+    @Column(columnDefinition = "clob")
+    private String responseSnapshot;
+
     @Column(nullable = false)
     private Instant createdAt;
+
+    private Instant updatedAt;
 }

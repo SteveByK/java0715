@@ -22,6 +22,18 @@ export function OutboxPage() {
     }
   }
 
+  async function publishPending() {
+    setError(null);
+    setResult(null);
+    try {
+      const data = await bankApi.publishPendingOutbox();
+      setEvents(data);
+      setResult(`已模拟发布 ${data.length} 条待处理事件`);
+    } catch (caught) {
+      setError(caught);
+    }
+  }
+
   return (
     <div className="two-column">
       <section className="panel">
@@ -32,6 +44,7 @@ export function OutboxPage() {
             <input value={aggregateId} onChange={(event) => setAggregateId(event.target.value)} />
           </label>
           <button onClick={query}>查询事件</button>
+          <button onClick={publishPending}>发布待处理事件</button>
         </div>
         <ResultNotice result={result} error={error} />
       </section>
