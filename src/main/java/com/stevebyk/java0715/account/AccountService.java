@@ -3,6 +3,7 @@ package com.stevebyk.java0715.account;
 import com.stevebyk.java0715.audit.AuditService;
 import com.stevebyk.java0715.common.BusinessException;
 import com.stevebyk.java0715.common.MoneyUtils;
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import com.stevebyk.java0715.idempotency.IdempotencyService;
 import com.stevebyk.java0715.ledger.LedgerDirection;
 import com.stevebyk.java0715.ledger.LedgerService;
@@ -13,7 +14,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service for the account aggregate.
+ *
+ * <p>This service is the only write boundary for account balances. Transfer and
+ * remittance contexts call debit or credit methods here so account status,
+ * currency checks, ledger entries and idempotency behavior stay consistent.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class AccountService {
 
     private final AccountRepository accountRepository;

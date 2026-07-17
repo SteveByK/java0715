@@ -1,5 +1,6 @@
 package com.stevebyk.java0715.audit;
 
+import com.stevebyk.java0715.common.ddd.AggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +15,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "audit_log")
+@AggregateRoot
 public class AuditLogEntity {
 
     @Id

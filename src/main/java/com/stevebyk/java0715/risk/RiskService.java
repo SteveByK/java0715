@@ -1,11 +1,20 @@
 package com.stevebyk.java0715.risk;
 
+import com.stevebyk.java0715.common.ddd.DomainServiceRole;
 import java.math.BigDecimal;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+/**
+ * Domain policy service for risk decisions.
+ *
+ * <p>Current rules are intentionally simple but isolated here so later
+ * integration with a fraud or compliance system does not leak into payment
+ * orchestration code.</p>
+ */
 @Service
+@DomainServiceRole
 public class RiskService {
 
     private static final Set<String> HIGH_RISK_COUNTRIES = Set.of("IR", "KP", "SY");

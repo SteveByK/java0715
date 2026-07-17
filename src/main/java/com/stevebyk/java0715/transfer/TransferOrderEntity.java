@@ -1,5 +1,6 @@
 package com.stevebyk.java0715.transfer;
 
+import com.stevebyk.java0715.common.ddd.AggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,10 +14,17 @@ import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Domestic transfer order aggregate.
+ *
+ * <p>The order records command identity, risk result and lifecycle status.
+ * Ledger entries remain the source of truth for actual debit and credit facts.</p>
+ */
 @Getter
 @Setter
 @Entity
 @Table(name = "transfer_order")
+@AggregateRoot
 public class TransferOrderEntity {
 
     @Id

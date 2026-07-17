@@ -1,5 +1,6 @@
 package com.stevebyk.java0715.transfer;
 
+import com.stevebyk.java0715.common.ddd.AggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +18,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "reversal_order")
+@AggregateRoot
 public class ReversalOrderEntity {
 
     @Id

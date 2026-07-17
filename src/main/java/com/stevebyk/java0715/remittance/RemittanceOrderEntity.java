@@ -1,5 +1,6 @@
 package com.stevebyk.java0715.remittance;
 
+import com.stevebyk.java0715.common.ddd.AggregateRoot;
 import com.stevebyk.java0715.transfer.TransactionStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,10 +15,17 @@ import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * International remittance order aggregate.
+ *
+ * <p>The order preserves source amount, locked target amount, consumed quote,
+ * risk outcome and settlement status for future audit and reconciliation.</p>
+ */
 @Getter
 @Setter
 @Entity
 @Table(name = "remittance_order")
+@AggregateRoot
 public class RemittanceOrderEntity {
 
     @Id

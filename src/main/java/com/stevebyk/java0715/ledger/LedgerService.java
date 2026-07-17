@@ -1,12 +1,20 @@
 package com.stevebyk.java0715.ledger;
 
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/**
+ * Append-only ledger writer and query service.
+ *
+ * <p>Every successful money movement should create ledger entries. This service
+ * keeps balance mutation traceability separate from mutable balance snapshots.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class LedgerService {
 
     private final LedgerEntryRepository ledgerEntryRepository;

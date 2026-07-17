@@ -1,6 +1,7 @@
 package com.stevebyk.java0715.customer;
 
 import com.stevebyk.java0715.account.UserRegion;
+import com.stevebyk.java0715.common.ddd.AggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +18,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "customer_profile")
+@AggregateRoot
 public class CustomerEntity {
 
     @Id

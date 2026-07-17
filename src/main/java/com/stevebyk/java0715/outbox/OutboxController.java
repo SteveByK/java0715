@@ -1,6 +1,8 @@
 package com.stevebyk.java0715.outbox;
 
 import com.stevebyk.java0715.common.ApiResponse;
+import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/outbox")
+@Tag(name = "Outbox", description = "Reliable domain event relay APIs")
+@InboundAdapter
 public class OutboxController {
 
     private final OutboxService outboxService;

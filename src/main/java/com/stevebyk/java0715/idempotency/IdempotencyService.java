@@ -1,12 +1,20 @@
 package com.stevebyk.java0715.idempotency;
 
 import com.stevebyk.java0715.common.BusinessException;
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Support service for command idempotency.
+ *
+ * <p>Business services use request id plus business type as the external command
+ * identity. This keeps client retries from becoming duplicate money movement.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class IdempotencyService {
 
     private final IdempotencyRepository idempotencyRepository;

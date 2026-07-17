@@ -1,6 +1,8 @@
 package com.stevebyk.java0715.pricing;
 
 import com.stevebyk.java0715.common.ApiResponse;
+import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequestMapping("/api/v1/pricing")
+@Tag(name = "Pricing", description = "Database-backed exchange-rate and fee quote APIs")
+@InboundAdapter
 public class PricingController {
 
     private final PricingService pricingService;

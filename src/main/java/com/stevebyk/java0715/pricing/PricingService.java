@@ -2,6 +2,7 @@ package com.stevebyk.java0715.pricing;
 
 import com.stevebyk.java0715.common.BusinessException;
 import com.stevebyk.java0715.common.MoneyUtils;
+import com.stevebyk.java0715.common.ddd.DomainServiceRole;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -10,7 +11,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Domain service for remittance pricing.
+ *
+ * <p>Pricing combines exchange-rate and fee-rule repositories into a short-lived
+ * quote. Quote usage is locked and stateful so settlement cannot use stale or
+ * already consumed pricing decisions.</p>
+ */
 @Service
+@DomainServiceRole
 public class PricingService {
 
     public static final String REMITTANCE = "INTERNATIONAL_REMITTANCE";

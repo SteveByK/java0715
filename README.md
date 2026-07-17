@@ -53,6 +53,12 @@ Detailed scenario mapping:
 docs/scenario-code-map.md
 ```
 
+DDD design notes:
+
+```text
+docs/ddd-design.md
+```
+
 Frontend guide:
 
 ```text

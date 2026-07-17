@@ -2,13 +2,22 @@ package com.stevebyk.java0715.customer;
 
 import com.stevebyk.java0715.audit.AuditService;
 import com.stevebyk.java0715.common.BusinessException;
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import com.stevebyk.java0715.outbox.OutboxService;
 import java.time.Instant;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service for customer profile and KYC lifecycle.
+ *
+ * <p>Customer and KYC state is kept separate from payment order state so payment
+ * contexts can depend on stable customer identifiers without owning onboarding
+ * workflows.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class CustomerService {
 
     private final CustomerRepository customerRepository;

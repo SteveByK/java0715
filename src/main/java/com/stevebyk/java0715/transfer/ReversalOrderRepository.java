@@ -1,8 +1,10 @@
 package com.stevebyk.java0715.transfer;
 
+import com.stevebyk.java0715.common.ddd.OutboundPort;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+@OutboundPort
 public interface ReversalOrderRepository extends JpaRepository<ReversalOrderEntity, Long> {
 
     Optional<ReversalOrderEntity> findByOriginalOrderNo(String originalOrderNo);

@@ -1,6 +1,8 @@
 package com.stevebyk.java0715.transfer;
 
 import com.stevebyk.java0715.common.ApiResponse;
+import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/transfers")
+@Tag(name = "Domestic Transfer", description = "Domestic transfer orchestration and reversal commands")
+@InboundAdapter
 public class TransferController {
 
     private final TransferService transferService;

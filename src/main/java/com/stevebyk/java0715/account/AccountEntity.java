@@ -1,5 +1,6 @@
 package com.stevebyk.java0715.account;
 
+import com.stevebyk.java0715.common.ddd.AggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,10 +15,17 @@ import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Account aggregate persistence model.
+ *
+ * <p>The row stores the current balance snapshot. Immutable money movement
+ * history is intentionally stored in ledger entries instead of this table.</p>
+ */
 @Getter
 @Setter
 @Entity
 @Table(name = "account_balance")
+@AggregateRoot
 public class AccountEntity {
 
     @Id

@@ -5,6 +5,7 @@ import com.stevebyk.java0715.account.AccountService;
 import com.stevebyk.java0715.audit.AuditService;
 import com.stevebyk.java0715.common.BusinessException;
 import com.stevebyk.java0715.common.MoneyUtils;
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import com.stevebyk.java0715.idempotency.IdempotencyService;
 import com.stevebyk.java0715.lock.AccountLockExecutor;
 import com.stevebyk.java0715.outbox.OutboxService;
@@ -20,7 +21,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service for international remittance orchestration.
+ *
+ * <p>The service consumes a locked quote, applies remittance risk policy, moves
+ * funds through account services and records traceability for exchange-rate and
+ * fee decisions.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class RemittanceService {
 
     private final AccountService accountService;

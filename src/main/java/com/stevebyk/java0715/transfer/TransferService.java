@@ -5,6 +5,7 @@ import com.stevebyk.java0715.account.AccountService;
 import com.stevebyk.java0715.audit.AuditService;
 import com.stevebyk.java0715.common.BusinessException;
 import com.stevebyk.java0715.common.MoneyUtils;
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import com.stevebyk.java0715.idempotency.IdempotencyService;
 import com.stevebyk.java0715.lock.AccountLockExecutor;
 import com.stevebyk.java0715.outbox.OutboxService;
@@ -17,7 +18,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Application service for domestic transfer orchestration.
+ *
+ * <p>The service coordinates risk, idempotency, account locking, balance
+ * mutation, ledger writing, audit and outbox publishing. It does not own account
+ * balances; it delegates balance changes to the account context.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class TransferService {
 
     private final AccountService accountService;

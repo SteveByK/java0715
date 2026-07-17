@@ -1,12 +1,21 @@
 package com.stevebyk.java0715.outbox;
 
+import com.stevebyk.java0715.common.ddd.ApplicationServiceRole;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Transactional outbox service.
+ *
+ * <p>Domain events are persisted with the business transaction and later moved
+ * to published state by a relay. This prepares the monolith for reliable message
+ * publishing when contexts are split into services.</p>
+ */
 @Service
+@ApplicationServiceRole
 public class OutboxService {
 
     private final OutboxEventRepository outboxEventRepository;
