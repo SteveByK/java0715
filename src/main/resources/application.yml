@@ -43,3 +43,7 @@ bank:
     high-risk-threshold: 200000.00
     remittance-high-risk-threshold: 50000.00
     default-remittance-fee-rate: 0.003
+  lock:
+    wait-timeout: 3s
+    slow-wait-threshold: 200ms
+    slow-hold-threshold: 500ms

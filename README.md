@@ -59,6 +59,12 @@ DDD design notes:
 docs/ddd-design.md
 ```
 
+Lock design notes:
+
+```text
+docs/lock-design.md
+```
+
 Frontend guide:
 
 ```text

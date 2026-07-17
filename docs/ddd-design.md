@@ -39,6 +39,7 @@ and can later become ArchUnit/static-analysis rules.
 - Remittance settlement must use a backend-created quote.
 - Outbox rows are created in business transactions before external publication.
 - Persistence entities are not exposed directly as API responses.
+- Money movement orchestration should use `AccountLockExecutor` before touching multiple accounts.
 
 ## Future Quality Gate
 
