@@ -37,7 +37,11 @@ springdoc:
 
 bank:
   security:
-    api-key: ${BANK_API_KEY:dev-api-key}
+    jwt-secret: ${BANK_JWT_SECRET:java0715-dev-jwt-secret-change-before-production-32bytes}
+    access-token-ttl: ${BANK_ACCESS_TOKEN_TTL:15m}
+    refresh-token-ttl: ${BANK_REFRESH_TOKEN_TTL:7d}
+    max-failed-login: ${BANK_MAX_FAILED_LOGIN:5}
+    lock-duration: ${BANK_LOCK_DURATION:15m}
   transfer:
     domestic-daily-limit: 500000.00
     high-risk-threshold: 200000.00

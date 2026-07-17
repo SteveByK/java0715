@@ -33,7 +33,7 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/java0715?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
       DB_USERNAME: bank
       DB_PASSWORD: bank123456
-      BANK_API_KEY: dev-api-key
+      BANK_JWT_SECRET: java0715-compose-jwt-secret-change-before-production
     ports:
       - "8081:8080"
 

@@ -19,6 +19,7 @@ The project is intentionally built as a modular monolith. It keeps deployment si
 - Docker Compose
 - Flyway demo data generation
 - React + Bun + Vite frontend console
+- JWT authentication, refresh-token rotation and RBAC method security
 
 ## Architecture
 
@@ -33,6 +34,7 @@ Main design choices:
 - Database-backed remittance quote locking with fee rule and exchange-rate traceability.
 - Outbox table with pending publish processing for future Kafka/RocketMQ integration.
 - Audit log for every core operation.
+- Identity access management: database users, roles, permissions, refresh tokens and login logs.
 
 ## Core Scenarios
 
@@ -76,6 +78,7 @@ docs/frontend.md
 Flyway migration `V2__seed_demo_banking_data.sql` creates demo accounts, orders, ledger entries, audit logs and outbox events.
 `V3__advanced_banking_features.sql` adds customer/KYC, pricing and reversal tables.
 `V4__production_hardening.sql` adds remittance quote locking plus Outbox and idempotency operational fields.
+`V5__auth_identity_access.sql` adds login users, roles, permissions, refresh tokens and login audit logs.
 
 Useful demo identifiers:
 
@@ -89,6 +92,14 @@ TR_DEMO_SUCCESS       successful domestic transfer
 TR_DEMO_RISK_REJECTED high-amount transfer rejected by risk
 RM_DEMO_SUCCESS       successful international remittance
 RM_DEMO_RISK_REJECTED blocked-country remittance rejected by risk
+```
+
+Demo login users:
+
+```text
+admin/admin123      administrator with all permissions
+teller/teller123    branch teller for customer, account, transfer and remittance work
+auditor/auditor123  read-only auditor for ledger, audit and event diagnostics
 ```
 
 ## Run Locally
@@ -140,10 +151,18 @@ Open:
 http://localhost:5173
 ```
 
-All business APIs require:
+All business APIs require a bearer access token. Login first:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login ^
+  -H "Content-Type: application/json" ^
+  -d "{\"username\":\"admin\",\"password\":\"admin123\"}"
+```
+
+Then call protected APIs with:
 
 ```text
-X-API-Key: dev-api-key
+Authorization: Bearer <accessToken>
 ```
 
 ## Example API Calls
@@ -153,7 +172,7 @@ Create account:
 ```bash
 curl -X POST http://localhost:8080/api/v1/accounts ^
   -H "Content-Type: application/json" ^
-  -H "X-API-Key: dev-api-key" ^
+  -H "Authorization: Bearer <accessToken>" ^
   -d "{\"customerId\":\"C1001\",\"ownerName\":\"Zhang San\",\"userRegion\":\"DOMESTIC\",\"accountType\":\"SAVINGS\",\"currency\":\"CNY\"}"
 ```
 
@@ -162,7 +181,7 @@ Deposit:
 ```bash
 curl -X POST http://localhost:8080/api/v1/accounts/{accountNo}/deposits ^
   -H "Content-Type: application/json" ^
-  -H "X-API-Key: dev-api-key" ^
+  -H "Authorization: Bearer <accessToken>" ^
   -d "{\"requestId\":\"dep-1001\",\"amount\":10000.00,\"currency\":\"CNY\",\"remark\":\"initial deposit\"}"
 ```
 
@@ -171,7 +190,7 @@ Domestic transfer:
 ```bash
 curl -X POST http://localhost:8080/api/v1/transfers/domestic ^
   -H "Content-Type: application/json" ^
-  -H "X-API-Key: dev-api-key" ^
+  -H "Authorization: Bearer <accessToken>" ^
   -d "{\"requestId\":\"tr-1001\",\"fromAccountNo\":\"AC_FROM\",\"toAccountNo\":\"AC_TO\",\"amount\":1200.00,\"currency\":\"CNY\",\"remark\":\"rent\"}"
 ```
 
@@ -181,7 +200,7 @@ First quote the remittance:
 
 ```bash
 curl "http://localhost:8080/api/v1/pricing/remittance-quote?sourceCurrency=CNY&targetCurrency=USD&sourceAmount=700" ^
-  -H "X-API-Key: dev-api-key"
+  -H "Authorization: Bearer <accessToken>"
 ```
 
 Then submit with the returned `quoteId`:
@@ -189,7 +208,7 @@ Then submit with the returned `quoteId`:
 ```bash
 curl -X POST http://localhost:8080/api/v1/remittances ^
   -H "Content-Type: application/json" ^
-  -H "X-API-Key: dev-api-key" ^
+  -H "Authorization: Bearer <accessToken>" ^
   -d "{\"requestId\":\"rm-1001\",\"senderAccountNo\":\"AC_CNY\",\"receiverAccountNo\":\"AC_USD\",\"sourceAmount\":700.00,\"sourceCurrency\":\"CNY\",\"targetCurrency\":\"USD\",\"quoteId\":\"QT_RETURNED_BY_QUOTE_API\",\"destinationCountry\":\"US\",\"swiftCode\":\"BOFAUS3N\",\"remark\":\"family support\"}"
 ```
 
@@ -197,7 +216,7 @@ Query seed transfer ledger:
 
 ```bash
 curl http://localhost:8080/api/v1/ledger/transactions/TR_DEMO_SUCCESS ^
-  -H "X-API-Key: dev-api-key"
+  -H "Authorization: Bearer <accessToken>"
 ```
 
 Freeze or reactivate an account:
@@ -205,7 +224,7 @@ Freeze or reactivate an account:
 ```bash
 curl -X PATCH http://localhost:8080/api/v1/accounts/AC_DEMO_CNY_FROZEN/status ^
   -H "Content-Type: application/json" ^
-  -H "X-API-Key: dev-api-key" ^
+  -H "Authorization: Bearer <accessToken>" ^
   -d "{\"status\":\"ACTIVE\",\"reason\":\"manual review passed\"}"
 ```
 

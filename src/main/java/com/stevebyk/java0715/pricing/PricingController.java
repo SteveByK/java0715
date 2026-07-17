@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,7 @@ public class PricingController {
 
     @Operation(summary = "Quote remittance", description = "Creates a short-lived locked remittance quote from exchange-rate and fee rules.")
     @GetMapping("/remittance-quote")
+    @PreAuthorize("hasAuthority('pricing:quote')")
     public ApiResponse<QuoteResponse> quoteRemittance(
             @RequestParam @NotBlank String sourceCurrency,
             @RequestParam @NotBlank String targetCurrency,

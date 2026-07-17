@@ -1,80 +1,78 @@
 package com.stevebyk.java0715.config;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stevebyk.java0715.auth.JwtAuthenticationFilter;
+import com.stevebyk.java0715.common.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.filter.OncePerRequestFilter;
 
+/**
+ * HTTP security adapter for the banking API.
+ *
+ * <p>The application uses stateless JWT access tokens, opaque refresh tokens
+ * stored in the database, and method-level RBAC permissions on controllers.</p>
+ */
 @Configuration
 @EnableWebSecurity
-/**
- * HTTP security adapter that protects business APIs with an API key.
- */
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, ApiKeyFilter apiKeyFilter) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
+                                            JwtAuthenticationFilter jwtAuthenticationFilter,
+                                            ObjectMapper objectMapper) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(configurer -> configurer
+                        .authenticationEntryPoint((request, response, exception) -> writeError(
+                                response, objectMapper, HttpServletResponse.SC_UNAUTHORIZED,
+                                "UNAUTHORIZED", "authentication is required"))
+                        .accessDeniedHandler((request, response, exception) -> writeError(
+                                response, objectMapper, HttpServletResponse.SC_FORBIDDEN,
+                                "FORBIDDEN", "permission denied")))
                 .authorizeHttpRequests(registry -> registry
-                        .requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().permitAll())
-                .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+                        .requestMatchers("/actuator/health/**", "/v3/api-docs/**",
+                                "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
-    ApiKeyFilter apiKeyFilter(@Value("${bank.security.api-key}") String apiKey) {
-        return new ApiKeyFilter(apiKey);
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
-    UserDetailsService userDetailsService() {
+    InMemoryUserDetailsManager userDetailsService() {
         return new InMemoryUserDetailsManager();
     }
 
-    static class ApiKeyFilter extends OncePerRequestFilter {
-
-        private final String apiKey;
-
-        ApiKeyFilter(String apiKey) {
-            this.apiKey = apiKey;
-        }
-
-        @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-                throws ServletException, IOException {
-            String path = request.getRequestURI();
-            if (path.startsWith("/actuator") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-            String suppliedKey = request.getHeader("X-API-Key");
-            if (suppliedKey == null) {
-                suppliedKey = request.getHeader(HttpHeaders.AUTHORIZATION);
-            }
-            if (suppliedKey == null || (!suppliedKey.equals(apiKey) && !suppliedKey.equals("Bearer " + apiKey))) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"missing or invalid API key\"}");
-                return;
-            }
-            filterChain.doFilter(request, response);
-        }
+    private static void writeError(HttpServletResponse response,
+                                   ObjectMapper objectMapper,
+                                   int status,
+                                   String code,
+                                   String message) throws java.io.IOException {
+        response.setStatus(status);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(response.getWriter(), ApiResponse.failed(code, message));
     }
 }

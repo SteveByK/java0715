@@ -36,6 +36,21 @@ button:hover {
   background: #1a5fc9;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+button.secondary {
+  border: 1px solid #c8d2e2;
+  color: #34506f;
+  background: #ffffff;
+}
+
+button.secondary:hover {
+  background: #f1f5f9;
+}
+
 button.danger {
   background: #b42318;
 }
@@ -187,6 +202,40 @@ th {
   color: #34506f;
   background: #ffffff;
   font-size: 13px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-layout {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: #eef4fb;
+}
+
+.login-panel {
+  width: min(420px, 100%);
+  border: 1px solid #dfe6f0;
+  border-radius: 8px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.login-brand {
+  margin-bottom: 22px;
+}
+
+.login-help {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .page-stack,
@@ -375,6 +424,11 @@ th {
   }
 
   .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar-actions {
     align-items: flex-start;
     flex-direction: column;
   }

@@ -6,6 +6,23 @@ export type ApiResponse<T> = {
   timestamp: string;
 };
 
+// Authenticated operator profile and RBAC grant set.
+export type AuthUser = {
+  userId: string;
+  username: string;
+  displayName: string;
+  roles: string[];
+  permissions: string[];
+};
+
+// Token response returned by login and refresh endpoints.
+export type LoginResponse = AuthUser & {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: "Bearer";
+  expiresInSeconds: number;
+};
+
 // Domain enum mirrors used by the frontend for status labels and request payloads.
 export type AccountStatus = "ACTIVE" | "FROZEN" | "CLOSED";
 export type AccountType = "SAVINGS" | "CHECKING" | "FOREIGN_CURRENCY";

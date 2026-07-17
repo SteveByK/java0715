@@ -9,8 +9,53 @@ http://localhost:8080/api/v1
 Header:
 
 ```text
-X-API-Key: dev-api-key
+Authorization: Bearer <accessToken>
 ```
+
+## Authentication
+
+### Login
+
+`POST /auth/login`
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+Demo users:
+
+```text
+admin/admin123      all permissions
+teller/teller123    teller business operations
+auditor/auditor123  read-only audit and ledger work
+```
+
+### Refresh Token
+
+`POST /auth/refresh`
+
+```json
+{
+  "refreshToken": "RT..."
+}
+```
+
+### Logout
+
+`POST /auth/logout`
+
+```json
+{
+  "refreshToken": "RT..."
+}
+```
+
+### Current User
+
+`GET /auth/me`
 
 ## Account
 

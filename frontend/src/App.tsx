@@ -10,7 +10,10 @@ import {
   RadioTower,
   ShieldAlert
 } from "lucide-react";
+import { FormEvent, useState } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { bankApi, clearSession, getErrorMessage, getStoredUser } from "./api/client";
+import type { AuthUser } from "./api/types";
 import { AccountsPage } from "./pages/AccountsPage";
 import { AuditPage } from "./pages/AuditPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -35,6 +38,18 @@ const navItems = [
 ];
 
 export function App() {
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+
+  if (!user) {
+    return <LoginScreen onLogin={setUser} />;
+  }
+
+  const logout = async () => {
+    await bankApi.logout();
+    clearSession();
+    setUser(null);
+  };
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -63,9 +78,12 @@ export function App() {
             <p className="eyebrow">Spring Boot API</p>
             <h1>银行业务控制台</h1>
           </div>
-          <div className="api-pill">
-            <Activity size={16} />
-            <span>Proxy: localhost:8081</span>
+          <div className="topbar-actions">
+            <div className="api-pill">
+              <Activity size={16} />
+              <span>{user.displayName} · {user.roles.join(", ")}</span>
+            </div>
+            <button type="button" className="secondary" onClick={logout}>退出</button>
           </div>
         </header>
         <Routes>
@@ -82,5 +100,63 @@ export function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("admin123");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await bankApi.login(username, password);
+      onLogin({
+        userId: response.userId,
+        username: response.username,
+        displayName: response.displayName,
+        roles: response.roles,
+        permissions: response.permissions
+      });
+    } catch (loginError) {
+      setError(getErrorMessage(loginError));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="login-layout">
+      <section className="login-panel">
+        <div className="brand login-brand">
+          <div className="brand-mark"><ShieldAlert size={22} /></div>
+          <div>
+            <strong>java0715</strong>
+            <span>Banking Console</span>
+          </div>
+        </div>
+        <form className="form-grid" onSubmit={submit}>
+          <label>
+            用户名
+            <input value={username} onChange={(event) => setUsername(event.target.value)} />
+          </label>
+          <label>
+            密码
+            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+          </label>
+          <button type="submit" disabled={loading}>{loading ? "登录中..." : "登录"}</button>
+        </form>
+        {error && <div className="notice error">{error}</div>}
+        <div className="login-help">
+          <span>admin/admin123 全权限</span>
+          <span>teller/teller123 柜员权限</span>
+          <span>auditor/auditor123 审计只读</span>
+        </div>
+      </section>
+    </main>
   );
 }
