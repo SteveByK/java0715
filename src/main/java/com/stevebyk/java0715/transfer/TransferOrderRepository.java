@@ -5,6 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for domestic transfer order lookup.
+ */
 public interface TransferOrderRepository extends JpaRepository<TransferOrderEntity, Long> {
 
     Optional<TransferOrderEntity> findByOrderNo(String orderNo);

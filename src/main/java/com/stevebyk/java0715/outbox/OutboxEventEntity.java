@@ -17,6 +17,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "outbox_event")
 @AggregateRoot
+/**
+ * Transactional outbox row waiting for reliable external publication.
+ */
 public class OutboxEventEntity {
 
     @Id

@@ -14,6 +14,9 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "idempotency_record")
+/**
+ * External command identity record used to prevent duplicate processing.
+ */
 public class IdempotencyRecord {
 
     @Id

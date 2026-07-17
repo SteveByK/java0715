@@ -5,6 +5,7 @@ import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 import { StatusBadge } from "../components/StatusBadge";
 
+// Account scenario page: query demo accounts, deposit, hold/release funds and update status.
 export function AccountsPage() {
   const [accountNo, setAccountNo] = useState("AC_DEMO_CNY_001");
   const [account, setAccount] = useState<Account | null>(null);

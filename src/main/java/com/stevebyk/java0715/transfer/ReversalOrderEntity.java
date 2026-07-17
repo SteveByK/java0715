@@ -19,6 +19,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "reversal_order")
 @AggregateRoot
+/**
+ * Compensation order created when a successful transfer is reversed.
+ */
 public class ReversalOrderEntity {
 
     @Id

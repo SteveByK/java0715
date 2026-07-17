@@ -5,6 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for idempotency records.
+ */
 public interface IdempotencyRepository extends JpaRepository<IdempotencyRecord, Long> {
 
     Optional<IdempotencyRecord> findByRequestIdAndBusinessType(String requestId, String businessType);

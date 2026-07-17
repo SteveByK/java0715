@@ -3,6 +3,9 @@ package com.stevebyk.java0715.remittance;
 import com.stevebyk.java0715.transfer.TransactionStatus;
 import java.math.BigDecimal;
 
+/**
+ * Remittance read model containing settlement, risk and pricing trace fields.
+ */
 public record RemittanceResponse(
         String orderNo,
         String requestId,

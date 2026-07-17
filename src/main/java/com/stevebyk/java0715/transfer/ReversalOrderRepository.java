@@ -5,6 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for transfer reversal orders.
+ */
 public interface ReversalOrderRepository extends JpaRepository<ReversalOrderEntity, Long> {
 
     Optional<ReversalOrderEntity> findByOriginalOrderNo(String originalOrderNo);

@@ -2,6 +2,9 @@ package com.stevebyk.java0715.account;
 
 import java.math.BigDecimal;
 
+/**
+ * Account read model returned to API clients.
+ */
 public record AccountResponse(
         String accountNo,
         String customerId,

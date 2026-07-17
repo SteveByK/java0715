@@ -5,6 +5,7 @@ import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 import { StatusBadge } from "../components/StatusBadge";
 
+// Ledger scenario page: inspect append-only account and transaction ledger entries.
 export function LedgerPage() {
   const [lookup, setLookup] = useState("TR_DEMO_SUCCESS");
   const [entries, setEntries] = useState<LedgerEntry[] | null>(null);

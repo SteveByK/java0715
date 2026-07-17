@@ -2,6 +2,7 @@ package com.stevebyk.java0715.audit;
 
 import com.stevebyk.java0715.common.ApiResponse;
 import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ public class AuditController {
         this.auditService = auditService;
     }
 
+    @Operation(summary = "Get audit logs", description = "Returns business audit events for one business number.")
     @GetMapping("/{businessNo}")
     public ApiResponse<List<AuditLogResponse>> byBusinessNo(@PathVariable String businessNo) {
         return ApiResponse.ok(auditService.findByBusinessNo(businessNo));

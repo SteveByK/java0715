@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * Command payload for cross-currency remittance submission.
+ */
 public record RemittanceRequest(
         @NotBlank String requestId,
         @NotBlank String senderAccountNo,

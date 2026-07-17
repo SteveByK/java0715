@@ -4,6 +4,7 @@ import type { Quote } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
+// Pricing scenario page: create locked remittance quotes from fee and FX rules.
 export function PricingPage() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [error, setError] = useState<unknown>(null);

@@ -4,6 +4,7 @@ import type { OutboxEvent } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
+// Outbox scenario page: inspect and simulate publishing reliable domain events.
 export function OutboxPage() {
   const [aggregateId, setAggregateId] = useState("RM_DEMO_SUCCESS");
   const [events, setEvents] = useState<OutboxEvent[] | null>(null);

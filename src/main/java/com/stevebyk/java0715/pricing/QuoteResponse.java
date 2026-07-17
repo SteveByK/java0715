@@ -3,6 +3,9 @@ package com.stevebyk.java0715.pricing;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+/**
+ * Pricing quote returned to clients before international remittance submission.
+ */
 public record QuoteResponse(
         String quoteId,
         String sourceCurrency,

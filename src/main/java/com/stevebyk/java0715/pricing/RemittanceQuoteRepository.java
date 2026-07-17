@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 
 @OutboundPort
+/**
+ * Persistence port for locked quote lookup and consumption.
+ */
 public interface RemittanceQuoteRepository extends JpaRepository<RemittanceQuoteEntity, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

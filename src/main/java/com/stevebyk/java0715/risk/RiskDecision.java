@@ -1,5 +1,8 @@
 package com.stevebyk.java0715.risk;
 
+/**
+ * Immutable result returned by risk policy checks.
+ */
 public record RiskDecision(
         boolean approved,
         String code,

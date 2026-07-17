@@ -33,6 +33,9 @@ public class CustomerService {
         this.outboxService = outboxService;
     }
 
+    /**
+     * Creates a customer profile with an initial risk classification.
+     */
     @Transactional
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
         CustomerEntity customer = new CustomerEntity();
@@ -57,6 +60,9 @@ public class CustomerService {
         }
     }
 
+    /**
+     * Returns customer profile and KYC summary by customer id.
+     */
     @Transactional(readOnly = true)
     public CustomerResponse getCustomer(String customerId) {
         CustomerEntity customer = loadCustomer(customerId);
@@ -64,6 +70,9 @@ public class CustomerService {
         return CustomerResponse.from(customer, kyc);
     }
 
+    /**
+     * Submits KYC document metadata and moves the KYC record to pending review.
+     */
     @Transactional
     public CustomerResponse submitKyc(String customerId, SubmitKycRequest request) {
         CustomerEntity customer = loadCustomer(customerId);
@@ -81,6 +90,9 @@ public class CustomerService {
         return CustomerResponse.from(customer, savedKyc);
     }
 
+    /**
+     * Applies a manual KYC review decision.
+     */
     @Transactional
     public CustomerResponse reviewKyc(String customerId, ReviewKycRequest request) {
         CustomerEntity customer = loadCustomer(customerId);

@@ -5,6 +5,7 @@ type Props = {
   error?: unknown;
 };
 
+// Shared feedback component for successful actions and API errors.
 export function ResultNotice({ result, error }: Props) {
   if (error) {
     return <div className="notice error">{getErrorMessage(error)}</div>;

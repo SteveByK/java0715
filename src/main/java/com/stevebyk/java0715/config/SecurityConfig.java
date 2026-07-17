@@ -20,6 +20,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 @EnableWebSecurity
+/**
+ * HTTP security adapter that protects business APIs with an API key.
+ */
 public class SecurityConfig {
 
     @Bean

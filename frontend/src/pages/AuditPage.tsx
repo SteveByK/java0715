@@ -4,6 +4,7 @@ import type { AuditLog } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
+// Audit scenario page: query business operation evidence by business number.
 export function AuditPage() {
   const [businessNo, setBusinessNo] = useState("TR_DEMO_SUCCESS");
   const [logs, setLogs] = useState<AuditLog[] | null>(null);

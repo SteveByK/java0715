@@ -4,6 +4,7 @@ import type { Reversal, TransferOrder } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
+// Transfer scenario page: execute domestic transfers, risk cases and reversals.
 export function TransferPage() {
   const [orderNo, setOrderNo] = useState("TR_DEMO_SUCCESS");
   const [transfer, setTransfer] = useState<TransferOrder | null>(null);

@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * Command payload for a same-currency domestic transfer.
+ */
 public record TransferRequest(
         @NotBlank String requestId,
         @NotBlank String fromAccountNo,

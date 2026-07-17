@@ -19,6 +19,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "customer_profile")
 @AggregateRoot
+/**
+ * Customer profile aggregate used by account opening and KYC workflows.
+ */
 public class CustomerEntity {
 
     @Id

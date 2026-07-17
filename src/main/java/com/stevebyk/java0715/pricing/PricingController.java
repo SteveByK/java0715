@@ -2,6 +2,7 @@ package com.stevebyk.java0715.pricing;
 
 import com.stevebyk.java0715.common.ApiResponse;
 import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +26,7 @@ public class PricingController {
         this.pricingService = pricingService;
     }
 
+    @Operation(summary = "Quote remittance", description = "Creates a short-lived locked remittance quote from exchange-rate and fee rules.")
     @GetMapping("/remittance-quote")
     public ApiResponse<QuoteResponse> quoteRemittance(
             @RequestParam @NotBlank String sourceCurrency,

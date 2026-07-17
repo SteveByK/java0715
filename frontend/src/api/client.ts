@@ -13,6 +13,7 @@ import type {
   TransferOrder
 } from "./types";
 
+// Centralized backend API adapter. Pages call this object instead of using axios directly.
 const api = axios.create({
   baseURL: "/api/v1",
   headers: {
@@ -20,11 +21,13 @@ const api = axios.create({
   }
 });
 
+// Backend responses are wrapped in ApiResponse; this helper returns only the business payload.
 async function unwrap<T>(promise: Promise<{ data: ApiResponse<T> }>): Promise<T> {
   const response = await promise;
   return response.data.data;
 }
 
+// Typed facade for all banking demo APIs used by the React console.
 export const bankApi = {
   getAccount: (accountNo: string) => unwrap<Account>(api.get(`/accounts/${accountNo}`)),
   createAccount: (payload: unknown) => unwrap<Account>(api.post("/accounts", payload)),
@@ -54,12 +57,14 @@ export const bankApi = {
   publishPendingOutbox: () => unwrap<OutboxEvent[]>(api.post("/outbox/publish-pending"))
 };
 
+// Stable demo ids seeded by Flyway and reused by the UI.
 export const demoIds = {
   accounts: ["AC_DEMO_CNY_001", "AC_DEMO_CNY_002", "AC_DEMO_USD_001", "AC_DEMO_CNY_FROZEN"],
   transfers: ["TR_DEMO_SUCCESS", "TR_DEMO_RISK_REJECTED"],
   remittances: ["RM_DEMO_SUCCESS", "RM_DEMO_RISK_REJECTED"]
 };
 
+// Normalizes axios and unknown errors into text that can be rendered by ResultNotice.
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as { message?: string; code?: string } | undefined;

@@ -5,6 +5,9 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for audit log queries.
+ */
 public interface AuditLogRepository extends JpaRepository<AuditLogEntity, Long> {
 
     List<AuditLogEntity> findByBusinessNoOrderByCreatedAtDesc(String businessNo);

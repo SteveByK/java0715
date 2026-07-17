@@ -5,6 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for active exchange-rate lookup.
+ */
 public interface ExchangeRateRepository extends JpaRepository<ExchangeRateEntity, Long> {
 
     Optional<ExchangeRateEntity> findFirstBySourceCurrencyAndTargetCurrencyAndStatusOrderByEffectiveAtDesc(

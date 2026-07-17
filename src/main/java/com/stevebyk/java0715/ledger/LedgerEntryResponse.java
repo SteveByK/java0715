@@ -3,6 +3,9 @@ package com.stevebyk.java0715.ledger;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+/**
+ * Ledger entry read model exposed by ledger query APIs.
+ */
 public record LedgerEntryResponse(
         String entryNo,
         String transactionNo,

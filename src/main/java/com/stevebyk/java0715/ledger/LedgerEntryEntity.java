@@ -19,6 +19,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "ledger_entry")
 @AggregateRoot
+/**
+ * Append-only ledger entry for one debit or credit movement.
+ */
 public class LedgerEntryEntity {
 
     @Id

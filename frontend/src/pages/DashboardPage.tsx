@@ -4,6 +4,7 @@ import { bankApi, demoIds, getErrorMessage } from "../api/client";
 import type { Account, RemittanceOrder, TransferOrder } from "../api/types";
 import { StatusBadge } from "../components/StatusBadge";
 
+// Dashboard page: summarizes the available banking business scenarios.
 export function DashboardPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transfers, setTransfers] = useState<TransferOrder[]>([]);

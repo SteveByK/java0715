@@ -2,6 +2,9 @@ package com.stevebyk.java0715.outbox;
 
 import java.time.Instant;
 
+/**
+ * Outbox event read model used by operations and diagnostics APIs.
+ */
 public record OutboxEventResponse(
         String eventId,
         String aggregateId,

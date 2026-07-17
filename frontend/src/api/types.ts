@@ -1,3 +1,4 @@
+// Generic response envelope returned by every Spring Boot API.
 export type ApiResponse<T> = {
   code: string;
   message: string;
@@ -5,6 +6,7 @@ export type ApiResponse<T> = {
   timestamp: string;
 };
 
+// Domain enum mirrors used by the frontend for status labels and request payloads.
 export type AccountStatus = "ACTIVE" | "FROZEN" | "CLOSED";
 export type AccountType = "SAVINGS" | "CHECKING" | "FOREIGN_CURRENCY";
 export type UserRegion = "DOMESTIC" | "OVERSEAS";
@@ -22,6 +24,7 @@ export type TransactionStatus =
   | "REVERSED"
   | "UNKNOWN";
 
+// Account balance snapshot returned by account APIs.
 export type Account = {
   accountNo: string;
   customerId: string;
@@ -34,6 +37,7 @@ export type Account = {
   status: AccountStatus;
 };
 
+// Domestic transfer order view.
 export type TransferOrder = {
   orderNo: string;
   requestId: string;
@@ -47,6 +51,7 @@ export type TransferOrder = {
   failureReason?: string | null;
 };
 
+// International remittance order view with pricing trace fields.
 export type RemittanceOrder = {
   orderNo: string;
   requestId: string;
@@ -67,6 +72,7 @@ export type RemittanceOrder = {
   failureReason?: string | null;
 };
 
+// Immutable ledger entry view for transaction and account history.
 export type LedgerEntry = {
   entryNo: string;
   transactionNo: string;
@@ -79,6 +85,7 @@ export type LedgerEntry = {
   createdAt: string;
 };
 
+// Business audit event view.
 export type AuditLog = {
   businessNo: string;
   action: string;
@@ -87,6 +94,7 @@ export type AuditLog = {
   createdAt: string;
 };
 
+// Transactional outbox event view for future message relay diagnostics.
 export type OutboxEvent = {
   eventId: string;
   aggregateId: string;
@@ -100,6 +108,7 @@ export type OutboxEvent = {
   updatedAt?: string | null;
 };
 
+// Customer profile view enriched with KYC summary.
 export type Customer = {
   customerId: string;
   fullName: string;
@@ -113,6 +122,7 @@ export type Customer = {
   kycLevel?: KycLevel | null;
 };
 
+// Locked remittance quote returned before remittance submission.
 export type Quote = {
   quoteId: string;
   sourceCurrency: string;
@@ -126,6 +136,7 @@ export type Quote = {
   expiresAt: string;
 };
 
+// Transfer reversal order view.
 export type Reversal = {
   reversalNo: string;
   originalOrderNo: string;

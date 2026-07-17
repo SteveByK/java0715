@@ -4,6 +4,7 @@ import type { Customer } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
+// Customer scenario page: create customers, submit KYC and review KYC status.
 export function CustomersPage() {
   const [customerId, setCustomerId] = useState("C_DEMO_001");
   const [customer, setCustomer] = useState<Customer | null>(null);

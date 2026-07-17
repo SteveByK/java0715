@@ -2,6 +2,9 @@ package com.stevebyk.java0715.customer;
 
 import com.stevebyk.java0715.account.UserRegion;
 
+/**
+ * Customer read model combining profile and KYC summary.
+ */
 public record CustomerResponse(
         String customerId,
         String fullName,

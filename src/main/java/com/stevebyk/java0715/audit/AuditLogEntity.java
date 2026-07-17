@@ -16,6 +16,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "audit_log")
 @AggregateRoot
+/**
+ * Persisted audit event for one business operation outcome.
+ */
 public class AuditLogEntity {
 
     @Id

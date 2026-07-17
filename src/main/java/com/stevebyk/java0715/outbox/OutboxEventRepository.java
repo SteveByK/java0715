@@ -5,6 +5,9 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for outbox event lookup and relay polling.
+ */
 public interface OutboxEventRepository extends JpaRepository<OutboxEventEntity, Long> {
 
     List<OutboxEventEntity> findByAggregateIdOrderByCreatedAtDesc(String aggregateId);

@@ -21,6 +21,7 @@ import { PricingPage } from "./pages/PricingPage";
 import { RemittancePage } from "./pages/RemittancePage";
 import { TransferPage } from "./pages/TransferPage";
 
+// Application shell: navigation, route table and page layout for the banking console.
 const navItems = [
   { to: "/dashboard", label: "总览", icon: Gauge },
   { to: "/customers", label: "客户KYC", icon: Contact },

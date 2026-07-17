@@ -5,6 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for remittance order lookup.
+ */
 public interface RemittanceOrderRepository extends JpaRepository<RemittanceOrderEntity, Long> {
 
     Optional<RemittanceOrderEntity> findByOrderNo(String orderNo);

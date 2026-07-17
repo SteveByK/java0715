@@ -18,6 +18,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "kyc_profile")
 @AggregateRoot
+/**
+ * KYC aggregate containing masked identity document and review status.
+ */
 public class KycEntity {
 
     @Id

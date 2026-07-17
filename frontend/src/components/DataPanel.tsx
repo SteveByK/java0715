@@ -6,6 +6,7 @@ type Props<T> = {
   error?: unknown;
 };
 
+// Reusable JSON inspection panel for API responses and diagnostics.
 export function DataPanel<T>({ title, data, error }: Props<T>) {
   return (
     <section className="panel">

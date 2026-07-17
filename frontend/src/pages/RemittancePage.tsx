@@ -4,6 +4,7 @@ import type { Quote, RemittanceOrder } from "../api/types";
 import { DataPanel } from "../components/DataPanel";
 import { ResultNotice } from "../components/ResultNotice";
 
+// Remittance scenario page: quote, submit and query international remittance orders.
 export function RemittancePage() {
   const [orderNo, setOrderNo] = useState("RM_DEMO_SUCCESS");
   const [remittance, setRemittance] = useState<RemittanceOrder | null>(null);

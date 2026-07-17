@@ -35,6 +35,9 @@ public class PricingService {
         this.remittanceQuoteRepository = remittanceQuoteRepository;
     }
 
+    /**
+     * Creates and persists a short-lived remittance quote.
+     */
     @Transactional
     public QuoteResponse quoteRemittance(String sourceCurrency, String targetCurrency, BigDecimal sourceAmount) {
         MoneyUtils.requirePositive(sourceAmount);
@@ -67,6 +70,9 @@ public class PricingService {
         return toResponse(remittanceQuoteRepository.save(quote));
     }
 
+    /**
+     * Calculates only the fee for legacy callers that do not need a persisted quote.
+     */
     public BigDecimal calculateRemittanceFee(String sourceCurrency, String targetCurrency, BigDecimal sourceAmount) {
         String normalizedSource = sourceCurrency.toUpperCase();
         String normalizedTarget = targetCurrency.toUpperCase();
@@ -77,6 +83,9 @@ public class PricingService {
         return calculateFee(MoneyUtils.normalize(sourceAmount, normalizedSource), feeRule);
     }
 
+    /**
+     * Consumes a persisted quote after locking and validating request attributes.
+     */
     @Transactional
     public QuoteResponse useQuote(String quoteId, String sourceCurrency, String targetCurrency, BigDecimal sourceAmount) {
         RemittanceQuoteEntity quote = remittanceQuoteRepository.findByQuoteId(quoteId)

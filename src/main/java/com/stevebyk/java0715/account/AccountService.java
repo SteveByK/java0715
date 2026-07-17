@@ -40,6 +40,9 @@ public class AccountService {
         this.outboxService = outboxService;
     }
 
+    /**
+     * Opens a new account aggregate and publishes an account-opened event.
+     */
     @Transactional
     public AccountResponse createAccount(CreateAccountRequest request) {
         AccountEntity account = new AccountEntity();
@@ -57,6 +60,9 @@ public class AccountService {
         return AccountResponse.from(saved);
     }
 
+    /**
+     * Returns the current account balance snapshot.
+     */
     @Transactional(readOnly = true)
     public AccountResponse getAccount(String accountNo) {
         return accountRepository.findByAccountNo(accountNo)
@@ -64,6 +70,9 @@ public class AccountService {
                 .orElseThrow(() -> new BusinessException("ACCOUNT_NOT_FOUND", "account not found"));
     }
 
+    /**
+     * Credits funds into an active account with idempotency and ledger recording.
+     */
     @Transactional
     public AccountResponse deposit(String accountNo, DepositRequest request) {
         MoneyUtils.requirePositive(request.amount());
@@ -84,6 +93,9 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
+    /**
+     * Updates the operational status of an account.
+     */
     @Transactional
     public AccountResponse updateStatus(String accountNo, UpdateAccountStatusRequest request) {
         AccountEntity account = loadForUpdate(accountNo);
@@ -96,6 +108,9 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
+    /**
+     * Reserves funds by moving available balance to frozen balance.
+     */
     @Transactional
     public AccountResponse holdFunds(String accountNo, HoldFundsRequest request) {
         MoneyUtils.requirePositive(request.amount());
@@ -120,6 +135,9 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
+    /**
+     * Releases reserved funds back into available balance.
+     */
     @Transactional
     public AccountResponse releaseFunds(String accountNo, HoldFundsRequest request) {
         MoneyUtils.requirePositive(request.amount());
@@ -144,11 +162,17 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
+    /**
+     * Loads an account row with a database write lock for balance mutation.
+     */
     public AccountEntity loadForUpdate(String accountNo) {
         return accountRepository.findByAccountNoForUpdate(accountNo)
                 .orElseThrow(() -> new BusinessException("ACCOUNT_NOT_FOUND", "account not found"));
     }
 
+    /**
+     * Debits an already locked account and appends a ledger entry.
+     */
     public void debit(AccountEntity account, BigDecimal amount, String transactionNo, String entryType) {
         ensureActive(account);
         if (account.getAvailableBalance().compareTo(amount) < 0) {
@@ -160,6 +184,9 @@ public class AccountService {
                 account.getAvailableBalance(), account.getCurrency(), entryType);
     }
 
+    /**
+     * Credits an already locked account and appends a ledger entry.
+     */
     public void credit(AccountEntity account, BigDecimal amount, String transactionNo, String entryType) {
         ensureActive(account);
         account.setAvailableBalance(account.getAvailableBalance().add(amount));
@@ -168,12 +195,18 @@ public class AccountService {
                 account.getAvailableBalance(), account.getCurrency(), entryType);
     }
 
+    /**
+     * Verifies that an account can participate in money movement.
+     */
     public void ensureActive(AccountEntity account) {
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new BusinessException("ACCOUNT_NOT_ACTIVE", "account is not active");
         }
     }
 
+    /**
+     * Verifies that an account currency matches the requested operation currency.
+     */
     public void ensureCurrency(AccountEntity account, String currency) {
         if (!account.getCurrency().equalsIgnoreCase(currency)) {
             throw new BusinessException("CURRENCY_MISMATCH", "account currency does not match request currency");

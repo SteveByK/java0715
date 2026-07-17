@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
+/**
+ * JVM-local implementation of account locking with timeout, metrics and slow-lock logs.
+ */
 public class LocalAccountLockExecutor implements AccountLockExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocalAccountLockExecutor.class);

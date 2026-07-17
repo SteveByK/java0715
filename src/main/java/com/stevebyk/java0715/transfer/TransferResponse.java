@@ -2,6 +2,9 @@ package com.stevebyk.java0715.transfer;
 
 import java.math.BigDecimal;
 
+/**
+ * Domestic transfer read model returned by command and query APIs.
+ */
 public record TransferResponse(
         String orderNo,
         String requestId,

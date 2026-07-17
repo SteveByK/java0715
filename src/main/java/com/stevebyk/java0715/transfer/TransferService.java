@@ -52,6 +52,9 @@ public class TransferService {
         this.reversalOrderRepository = reversalOrderRepository;
     }
 
+    /**
+     * Executes a same-currency domestic transfer with deterministic account locking.
+     */
     @Transactional
     public TransferResponse transfer(TransferRequest request) {
         if (request.fromAccountNo().equals(request.toAccountNo())) {
@@ -62,6 +65,9 @@ public class TransferService {
                 () -> doTransfer(request));
     }
 
+    /**
+     * Returns a domestic transfer order by business order number.
+     */
     @Transactional(readOnly = true)
     public TransferResponse getByOrderNo(String orderNo) {
         return transferOrderRepository.findByOrderNo(orderNo)
@@ -69,6 +75,9 @@ public class TransferService {
                 .orElseThrow(() -> new BusinessException("TRANSFER_NOT_FOUND", "transfer order not found"));
     }
 
+    /**
+     * Reverses a successful domestic transfer exactly once.
+     */
     @Transactional
     public ReversalResponse reverse(String orderNo, ReversalRequest request) {
         ReversalResponse existing = reversalOrderRepository.findByRequestId(request.requestId())

@@ -23,6 +23,9 @@ public class IdempotencyService {
         this.idempotencyRepository = idempotencyRepository;
     }
 
+    /**
+     * Creates a new idempotency record or rejects a duplicate command.
+     */
     public void ensureFirstRequest(String requestId, String businessType, String businessNo) {
         if (idempotencyRepository.findByRequestIdAndBusinessType(requestId, businessType).isPresent()) {
             throw new BusinessException("DUPLICATE_REQUEST", "request has already been processed");
@@ -41,10 +44,16 @@ public class IdempotencyService {
         }
     }
 
+    /**
+     * Looks up a previous command by external request id and business type.
+     */
     public Optional<IdempotencyRecord> findExisting(String requestId, String businessType) {
         return idempotencyRepository.findByRequestIdAndBusinessType(requestId, businessType);
     }
 
+    /**
+     * Stores a completed response snapshot for diagnostics and retry handling.
+     */
     public void markCompleted(String requestId, String businessType, String responseSnapshot) {
         idempotencyRepository.findByRequestIdAndBusinessType(requestId, businessType).ifPresent(record -> {
             record.setStatus("SUCCESS");

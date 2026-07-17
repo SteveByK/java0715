@@ -2,6 +2,7 @@ package com.stevebyk.java0715.transfer;
 
 import com.stevebyk.java0715.common.ApiResponse;
 import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,16 +24,19 @@ public class TransferController {
         this.transferService = transferService;
     }
 
+    @Operation(summary = "Create domestic transfer", description = "Transfers money between same-currency accounts with risk, locks and ledger entries.")
     @PostMapping("/domestic")
     public ApiResponse<TransferResponse> domesticTransfer(@Valid @RequestBody TransferRequest request) {
         return ApiResponse.ok(transferService.transfer(request));
     }
 
+    @Operation(summary = "Get transfer order", description = "Returns transfer status, risk result and failure reason if any.")
     @GetMapping("/{orderNo}")
     public ApiResponse<TransferResponse> get(@PathVariable String orderNo) {
         return ApiResponse.ok(transferService.getByOrderNo(orderNo));
     }
 
+    @Operation(summary = "Reverse transfer", description = "Compensates one successful domestic transfer exactly once.")
     @PostMapping("/{orderNo}/reversals")
     public ApiResponse<ReversalResponse> reverse(@PathVariable String orderNo,
                                                  @Valid @RequestBody ReversalRequest request) {

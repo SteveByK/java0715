@@ -5,6 +5,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @OutboundPort
+/**
+ * Persistence port for active fee-rule lookup.
+ */
 public interface FeeRuleRepository extends JpaRepository<FeeRuleEntity, Long> {
 
     Optional<FeeRuleEntity> findFirstByBusinessTypeAndSourceCurrencyAndTargetCurrencyAndStatusOrderByIdDesc(

@@ -6,6 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
+/**
+ * Spring Boot entry point for the banking application.
+ */
 public class Java0715Application {
 
     public static void main(String[] args) {

@@ -2,6 +2,7 @@ package com.stevebyk.java0715.outbox;
 
 import com.stevebyk.java0715.common.ApiResponse;
 import com.stevebyk.java0715.common.ddd.InboundAdapter;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,11 +23,13 @@ public class OutboxController {
         this.outboxService = outboxService;
     }
 
+    @Operation(summary = "Get outbox events", description = "Returns events recorded for one aggregate id.")
     @GetMapping("/{aggregateId}")
     public ApiResponse<List<OutboxEventResponse>> byAggregateId(@PathVariable String aggregateId) {
         return ApiResponse.ok(outboxService.findByAggregateId(aggregateId));
     }
 
+    @Operation(summary = "Publish pending outbox events", description = "Simulates a reliable relay by marking pending events as published.")
     @PostMapping("/publish-pending")
     public ApiResponse<List<OutboxEventResponse>> publishPending() {
         return ApiResponse.ok(outboxService.publishPending());

@@ -55,6 +55,9 @@ public class RemittanceService {
         this.pricingService = pricingService;
     }
 
+    /**
+     * Executes an international remittance using account locks and locked pricing quotes.
+     */
     @Transactional
     public RemittanceResponse remit(RemittanceRequest request) {
         return accountLockExecutor.executeWithAccountLocks(
@@ -62,6 +65,9 @@ public class RemittanceService {
                 () -> doRemit(request));
     }
 
+    /**
+     * Returns a remittance order by business order number.
+     */
     @Transactional(readOnly = true)
     public RemittanceResponse getByOrderNo(String orderNo) {
         return remittanceOrderRepository.findByOrderNo(orderNo)

@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 @OutboundPort
+/**
+ * Persistence port for account aggregate lookup and row locking.
+ */
 public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
     Optional<AccountEntity> findByAccountNo(String accountNo);

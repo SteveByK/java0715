@@ -19,6 +19,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "fee_rule")
 @AggregateRoot
+/**
+ * Fee rule used to calculate remittance service charges.
+ */
 public class FeeRuleEntity {
 
     @Id

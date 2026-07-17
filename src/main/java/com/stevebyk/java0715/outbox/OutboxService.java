@@ -24,6 +24,9 @@ public class OutboxService {
         this.outboxEventRepository = outboxEventRepository;
     }
 
+    /**
+     * Persists a domain event in the current transaction.
+     */
     @Transactional
     public void publish(String aggregateId, String eventType, String payload) {
         OutboxEventEntity entity = new OutboxEventEntity();
@@ -38,6 +41,9 @@ public class OutboxService {
         outboxEventRepository.save(entity);
     }
 
+    /**
+     * Simulates a relay publishing pending outbox rows.
+     */
     @Transactional
     public List<OutboxEventResponse> publishPending() {
         return outboxEventRepository.findTop50ByStatusInOrderByCreatedAtAsc(List.of("NEW", "FAILED")).stream()
@@ -46,6 +52,9 @@ public class OutboxService {
                 .toList();
     }
 
+    /**
+     * Returns outbox events recorded for one aggregate id.
+     */
     public List<OutboxEventResponse> findByAggregateId(String aggregateId) {
         return outboxEventRepository.findByAggregateIdOrderByCreatedAtDesc(aggregateId).stream()
                 .map(OutboxEventResponse::from)

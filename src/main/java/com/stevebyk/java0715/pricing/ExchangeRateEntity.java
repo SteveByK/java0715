@@ -19,6 +19,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "exchange_rate")
 @AggregateRoot
+/**
+ * Exchange-rate rule from one currency to another.
+ */
 public class ExchangeRateEntity {
 
     @Id

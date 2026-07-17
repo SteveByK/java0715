@@ -23,6 +23,9 @@ public class LedgerService {
         this.ledgerEntryRepository = ledgerEntryRepository;
     }
 
+    /**
+     * Appends one immutable ledger entry for a money movement.
+     */
     public void append(String transactionNo, String accountNo, LedgerDirection direction, BigDecimal amount,
                        BigDecimal balanceAfter, String currency, String entryType) {
         LedgerEntryEntity entity = new LedgerEntryEntity();
@@ -38,12 +41,18 @@ public class LedgerService {
         ledgerEntryRepository.save(entity);
     }
 
+    /**
+     * Finds ledger entries that belong to one business transaction.
+     */
     public List<LedgerEntryResponse> findByTransactionNo(String transactionNo) {
         return ledgerEntryRepository.findByTransactionNoOrderByIdAsc(transactionNo).stream()
                 .map(LedgerEntryResponse::from)
                 .toList();
     }
 
+    /**
+     * Finds ledger entries for one account ordered by newest first.
+     */
     public List<LedgerEntryResponse> findByAccountNo(String accountNo) {
         return ledgerEntryRepository.findByAccountNoOrderByCreatedAtDesc(accountNo).stream()
                 .map(LedgerEntryResponse::from)

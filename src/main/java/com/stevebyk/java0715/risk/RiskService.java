@@ -29,6 +29,9 @@ public class RiskService {
         this.remittanceHighRiskThreshold = remittanceHighRiskThreshold;
     }
 
+    /**
+     * Applies domestic transfer amount threshold risk policy.
+     */
     public RiskDecision checkDomesticTransfer(BigDecimal amount) {
         if (amount.compareTo(domesticHighRiskThreshold) > 0) {
             return RiskDecision.reject("DOMESTIC_HIGH_AMOUNT", "domestic transfer amount requires manual review");
@@ -36,6 +39,9 @@ public class RiskService {
         return RiskDecision.approve();
     }
 
+    /**
+     * Applies remittance amount and destination-country risk policy.
+     */
     public RiskDecision checkRemittance(BigDecimal sourceAmount, String destinationCountry) {
         if (HIGH_RISK_COUNTRIES.contains(destinationCountry)) {
             return RiskDecision.reject("HIGH_RISK_COUNTRY", "destination country is blocked by risk policy");

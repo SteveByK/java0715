@@ -2,6 +2,9 @@ package com.stevebyk.java0715.transfer;
 
 import java.math.BigDecimal;
 
+/**
+ * Read model returned after a transfer reversal command.
+ */
 public record ReversalResponse(
         String reversalNo,
         String originalOrderNo,
